@@ -51,18 +51,19 @@ namespace ChordSuggest {
 		public int[] noteNumbers {
 			get {
 				if (noteNumbers_ == null) {
-					noteNumbers_ = new int[harmony.toneStepList.Count+1];
+					noteNumbers_ = new int[harmony.toneStepList.Count];
 					for (int i = 0; i < harmony.toneStepList.Count; i++) {
 						noteNumbers_[i] = harmony.toneStepList[i];
 					}
-					noteNumbers_[harmony.toneStepList.Count] = harmony.baseNote - ChordBasic.toneCount;
-
 					for(int i=0;i<noteNumbers_.Length;i++){
 						noteNumbers_[i] += root.id + ChordBasic.toneList[0].noteNumber;
 					}
 				}
 				return noteNumbers_;
 			}
+		}
+		public int baseNoteNumber {
+			get { return root.id + harmony.baseNote + ChordBasic.toneList[0].noteNumber; }
 		}
 		public override string ToString(){
 			string str = root.name;

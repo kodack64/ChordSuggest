@@ -105,22 +105,181 @@ namespace ChordSuggest {
 				midiAdapter.close();
 			}
 		}
+		HashSet<int> playedNotes = new HashSet<int>();
+		int[] lastPlayedNotes = null;
 		public void playChord(Chord chord,int velocity,int channel,int transpose=0) {
 			if (chord == null) return;
-			var notes = chord.noteNumbers;
+			var notes = VoicingManage.getInstance().chordToNotes(chord,transpose);
 			foreach (int note in notes) {
-				midiAdapter.sendNote(note+transpose,velocity,channel);
+				midiAdapter.sendNote(note,velocity,channel);
+				playedNotes.Add(note);
 			}
+			lastPlayedNotes = notes;
 		}
 		public void stopChord(Chord chord,int channel,int transpose=0) {
-			if (chord == null) return;
+			stopNotes(channel);
+/*			if (chord == null) return;
 			var notes = chord.noteNumbers;
 			foreach (int note in notes) {
 				midiAdapter.stopNote(note+transpose,channel);
-			}
+			}*/
 		}
-		public void changeProgram(int program,int channel){
+		public void stopNotes(int channel) {
+			foreach(int note in playedNotes){
+				midiAdapter.stopNote(note, channel);
+			}
+			playedNotes.Clear();
+		}
+		public void changeProgram(int program, int channel) {
 			midiAdapter.changeProgram(program,channel);
+		}
+	}
+	class VoicingManage {
+		private VoicingManage() { }
+		private static VoicingManage myInstance=null;
+		public static void createInstance(){
+			if (myInstance == null) myInstance = new VoicingManage();
+		}
+		public static VoicingManage getInstance() { return myInstance; }
+		public int baseNotePolicyIndex { get; set; }
+		public int keepNotePolicyIndex { get; set; }
+		public int nearToPolicyIndex { get; set; }
+		public int baseNearToPolicyIndex { get; set; }
+		public enum BaseNotePolicy {
+			_None,
+			_1Oct,
+			_1Oct_5th,
+			_2Oct,
+			_2Oct_5th
+		}
+		public enum KeepNotePolicy {
+			_Nothing,
+			_KeepKeyRoot,
+			_KeepChordRoot,
+			_KeepRootTop
+		}
+		public enum NearToPolicy {
+			_Nothing,
+			_First,
+			_Previous
+		}
+		public enum BaseNearToPolicy {
+			_Nothing,
+			_First,
+			_Previous,
+			_Chord
+		}
+		public BaseNotePolicy baseNotePolicy { get { return (BaseNotePolicy)(Enum.GetValues(typeof(BaseNotePolicy)).GetValue(baseNotePolicyIndex)); } }
+		public KeepNotePolicy keepNotePolicy { get { return (KeepNotePolicy)(Enum.GetValues(typeof(KeepNotePolicy)).GetValue(keepNotePolicyIndex)); } }
+		public NearToPolicy nearToPolicy { get { return (NearToPolicy)(Enum.GetValues(typeof(NearToPolicy)).GetValue(nearToPolicyIndex)); } }
+		public BaseNearToPolicy baseNearToPolicy { get { return (BaseNearToPolicy)(Enum.GetValues(typeof(BaseNearToPolicy)).GetValue(baseNearToPolicyIndex)); } }
+		public int minimumInterval { get; set; }
+		private double lastChordCenter = 0;
+		private double lastBase = 0;
+		public void resetNearTo() {
+			lastChordCenter = 0;
+			lastBase = 0;
+		}
+		public int[] chordToNotes(Chord chord,int transpose) {
+			List<int> chordNotes = chord.noteNumbers.ToList();
+			for (int i = 0; i < chordNotes.Count; i++) chordNotes[i] += transpose;
+			int chordRoot = chordNotes[0];
+			int keyRoot = chord.root.id+transpose+ChordBasic.toneList[0].noteNumber;
+			int oct = ChordBasic.toneCount;
+
+			List<int> baseNotes = new List<int>();
+			int baseNote = chord.baseNoteNumber+transpose-oct;
+			// add base notes
+			if (baseNotePolicy == BaseNotePolicy._1Oct) baseNotes.Add(baseNote);
+			if (baseNotePolicy == BaseNotePolicy._1Oct_5th) { baseNotes.Add(baseNote); baseNotes.Add(baseNote + 7); }
+			if (baseNotePolicy == BaseNotePolicy._2Oct) { baseNotes.Add(baseNote); baseNotes.Add(baseNote - oct); }
+			if (baseNotePolicy == BaseNotePolicy._2Oct_5th) { baseNotes.Add(baseNote); baseNotes.Add(baseNote - oct); baseNotes.Add(baseNote + 7); }
+
+			// keep note and extend
+			List<int> rtn = new List<int>();
+
+			// arrange chord notes
+			if (nearToPolicy != NearToPolicy._Nothing && lastChordCenter != 0) {
+				if (lastChordCenter != 0) {
+					for (int i = 0; i < chordNotes.Count; i++) {
+						while (Math.Abs(chordNotes[i] - lastChordCenter) > oct / 2) {
+							chordNotes[i] -= Math.Sign(chordNotes[i] - lastChordCenter) * oct;
+						}
+					}
+					if(nearToPolicy == NearToPolicy._Previous)lastChordCenter = chordNotes.Sum() * 1.0 / chordNotes.Count;
+				}
+				rtn.AddRange(chordNotes);
+			} else {
+				if (keepNotePolicy == KeepNotePolicy._Nothing) {
+					// nothing
+				}
+				if (keepNotePolicy == KeepNotePolicy._KeepKeyRoot) {
+					for (int i = 0; i < chordNotes.Count; i++) {
+						while (Math.Abs(chordNotes[i] - keyRoot) > oct / 2) chordNotes[i] -= Math.Sign(chordNotes[i] - keyRoot) * oct;
+					}
+				}
+				if (keepNotePolicy == KeepNotePolicy._KeepChordRoot) {
+					for (int i = 0; i < chordNotes.Count; i++) {
+						while (Math.Abs(chordNotes[i] - chordRoot) > oct / 2) chordNotes[i] -= Math.Sign(chordNotes[i] - chordRoot) * oct;
+					}
+				}
+				if (keepNotePolicy == KeepNotePolicy._KeepRootTop) {
+					chordNotes[0] += oct;
+				}
+				lastChordCenter = chordNotes.Sum() * 1.0 / chordNotes.Count;
+				rtn.AddRange(chordNotes);
+			}
+
+
+			rtn = rtn.Distinct().ToList();
+			rtn.Sort();
+			for (int i = rtn.Count - 1; i >= 1; i--) {
+				if (rtn[i] - rtn[i - 1] < minimumInterval) {
+					rtn[i - 1] -= oct;
+					/*					if (keepNotePolicy == KeepNotePolicy._KeepRootTop && i == rtn.Count - 1) {
+											rtn[i - 1] -= oct;
+										} else {
+											if (minimumInterval < oct / 2) {
+												rtn[i] -= oct;
+											} else {
+												rtn[i-1] -= oct;
+											}
+										}*/
+					rtn.Sort();
+					i++;
+				}
+			}
+
+			if (baseNearToPolicy == BaseNearToPolicy._Chord) lastBase = lastChordCenter - oct;
+			// arrange base notes
+			if (baseNotes.Count > 0) {
+				if (baseNearToPolicy != BaseNearToPolicy._Nothing && lastBase != 0) {
+					while (Math.Abs(baseNotes[0] - lastBase) > oct / 2) {
+						for (int i = 0; i<baseNotes.Count;i++ ) baseNotes[i] -= Math.Sign(baseNotes[i] - lastBase) * oct;
+					}
+					if (baseNearToPolicy == BaseNearToPolicy._Previous) lastBase = baseNotes[0];
+					rtn.AddRange(baseNotes);
+				} else {
+					if (keepNotePolicy == KeepNotePolicy._Nothing) {
+						// nothing
+					}
+					if (keepNotePolicy == KeepNotePolicy._KeepKeyRoot) {
+						while (Math.Abs(baseNotes[0] - (keyRoot-oct)) > oct / 2) {
+							for (int i = 0; i < baseNotes.Count; i++) baseNotes[i] -= Math.Sign(baseNotes[i] - (keyRoot-oct)) * oct;
+						}
+					}
+					if (keepNotePolicy == KeepNotePolicy._KeepChordRoot) {
+						while (Math.Abs(baseNotes[0] - (chordRoot - oct)) > oct / 2) {
+							for (int i = 0; i < baseNotes.Count; i++) baseNotes[i] -= Math.Sign(baseNotes[i] - (chordRoot - oct)) * oct;
+						}
+					}
+					if (keepNotePolicy == KeepNotePolicy._KeepRootTop) {
+					}
+					lastBase = baseNotes[0];
+					rtn.AddRange(baseNotes);
+				}
+			}
+			return rtn.Distinct().ToArray();
 		}
 	}
 }

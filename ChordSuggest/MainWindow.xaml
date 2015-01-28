@@ -4,10 +4,6 @@
         Title="Chord Suggest" Height="900" Width="800"
         Closing="Window_Closing">
     <Grid>
-        <Grid.RowDefinitions>
-            <RowDefinition Height="*"/>
-            <RowDefinition Height="100"/>
-        </Grid.RowDefinitions>
         <TabControl Grid.Row="0" HorizontalAlignment="Stretch"
                     Name="TabControl"
                     VerticalAlignment="Stretch"
@@ -16,6 +12,7 @@
                 <Grid>
                     <Grid.RowDefinitions>
                         <RowDefinition Height="40"/>
+                        <RowDefinition Height="100"/>
                         <RowDefinition Height="30"/>
                         <RowDefinition Height="*"/>
                     </Grid.RowDefinitions>
@@ -26,27 +23,80 @@
                         </Grid.ColumnDefinitions>
                         <StackPanel Orientation="Horizontal" Margin="5" VerticalAlignment="Center">
                             <StackPanel Orientation="Horizontal">
-                                <RadioButton Name="RadioButton_IsMajorCheck" GroupName="MajorMinor" Content="Major" IsChecked="{Binding isMajor}" VerticalAlignment="Center" Checked="Callback_ChangeMajorMinor" Unchecked="Callback_ChangeMajorMinor"/>
-                                <RadioButton GroupName="MajorMinor" Content="Minor" VerticalAlignment="Center"/>
+                                <ComboBox Name="ComboBox_MajorMinor" SelectionChanged="Callback_ChangeMajorMinor">
+                                    <ComboBoxItem Content="Major" IsSelected="{Binding isMajor}"/>
+                                    <ComboBoxItem Content="Minor"/>
+                                </ComboBox>
                             </StackPanel>
-                            <CheckBox Name="CheckBox_HoldMode" Content="Hold mode" IsChecked="{Binding holdMode}" Margin="30,0,0,0" VerticalAlignment="Center"/>
-                            <StackPanel Orientation="Horizontal" Name="ChooseKey" Margin="30,0,0,0">
+                            <StackPanel Orientation="Horizontal" Name="ChooseKey" Margin="10,0,0,0">
                                 <Label Content="Key:" VerticalAlignment="Center"/>
                                 <ComboBox Name="ComboBox_ChooseKey" Height="20" Width="50"/>
                             </StackPanel>
-                            <StackPanel Orientation="Horizontal" Margin="30,0,0,0">
+                            <CheckBox Name="CheckBox_HoldMode" Content="Hold" IsChecked="{Binding holdMode}" Margin="10,0,0,0" VerticalAlignment="Center"/>
+                            <StackPanel Orientation="Horizontal" Margin="10,0,0,0">
                                 <Label Content="Ch:" VerticalAlignment="Center"/>
-                                <ComboBox Name="ComboBox_Channel" SelectedIndex="{Binding channelNumber}" Height="20" Width="50"/>
+                                <ComboBox Name="ComboBox_Channel" SelectedIndex="{Binding channelNumber}" Height="20" Width="50" SelectionChanged="Callback_ChannelChanged"/>
                             </StackPanel>
-                            <StackPanel Orientation="Horizontal" Margin="30,0,0,0" MouseLeftButtonDown="Callback_ProgramShow" Height="25" Background="#eeeeee">
-                                <Label Content="Prog:" VerticalAlignment="Center"/>
-                                <TextBlock Name="TextBlock_Program" Text="{Binding programName}" VerticalAlignment="Center"/>
+                            <StackPanel Orientation="Horizontal" Margin="10,0,0,0">
+                                <Label Content="Vel:" VerticalAlignment="Center"/>
+                                <TextBox Name="TextBox_Velocity" Text="{Binding noteVelocity,Mode=TwoWay,UpdateSourceTrigger=PropertyChanged}" Height="20" Width="30"/>
+                            </StackPanel>
+                            <StackPanel Orientation="Horizontal" Margin="10,0,0,0">
+                                <Label Content="Oct:" VerticalAlignment="Center"/>
+                                <TextBlock Name="TextBlock_Octave" Text="{Binding octaveShift,Mode=TwoWay,UpdateSourceTrigger=PropertyChanged}" Height="20" Width="20" Margin="0,0,5,0"/>
+                                <Button Name="Button_OctaveUp" Content="+" Height="20" Width="20" Click="Callback_OctaveUp"/>
+                                <Button Name="Button_OctaveDown" Content="-" Height="20" Width="20" Click="Callback_OctaveDown"/>
+                            </StackPanel>
+                            <StackPanel Orientation="Horizontal" Margin="10,0,0,0" MouseLeftButtonDown="Callback_ProgramShow" Height="25" Background="#eeeeee">
+                                <TextBlock Name="TextBlock_Program" Text="{Binding programName}" VerticalAlignment="Center" Width="160"/>
                             </StackPanel>
                         </StackPanel>
-                        <TextBlock Grid.Column="1" Margin="5" Text="Note Off" MouseLeftButtonDown="Callback_NoteOffButtonClicked" Background="LightGray"/>
+                        <TextBlock Grid.Column="1" Margin="5" Text="N.C." MouseLeftButtonDown="Callback_NoteOffButtonClicked" Background="LightGray" />
                     </Grid>
-                    <Grid Grid.Row="1" Margin="5,2,5,2" Name="ScalePanel"/>
-                    <Grid Grid.Row="2" Margin="5,0,5,0" Name="ChordPadPanel"/>
+                    <Grid Grid.Row="1" Margin="5,2,5,2">
+                        <StackPanel>
+                            <GroupBox Header="Chord Voicing">
+                                <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                    <Label Content="Voicing :" Margin="5,0,0,0"/>
+                                    <ComboBox Name="ComboBox_KeepNote" SelectedIndex="{Binding keepNotePolicyIndex}" Width="200">
+                                        <ComboBoxItem Content="Default" IsSelected="True" Selected="Callback_EnableInterval"/>
+                                        <ComboBoxItem Content="Keep around key root" IsSelected="True" Selected="Callback_EnableInterval"/>
+                                        <ComboBoxItem Content="Keep around chord root" Selected="Callback_EnableInterval"/>
+                                        <ComboBoxItem Content="Move root to top" Selected="Callback_EnableInterval"/>
+                                    </ComboBox>
+                                    <Label Content="Near to :" Margin="5,0,0,0"/>
+                                    <ComboBox Name="ComboBox_NearTo" SelectedIndex="{Binding nearToPolicyIndex}" Width="120">
+                                        <ComboBoxItem Content="Nothing"/>
+                                        <ComboBoxItem Content="First Chord"/>
+                                        <ComboBoxItem Content="Previous Chord"/>
+                                    </ComboBox>
+                                    <Label Content=" Min.Interval :" Margin="5,0,0,0"/>
+                                    <TextBox Name="TextBox_MinimumInterval" Text="{Binding minimumInterval,Mode=TwoWay,UpdateSourceTrigger=PropertyChanged}" Width="50"/>
+                                </StackPanel>
+                            </GroupBox>
+                            <GroupBox Header="Base Voicing">
+                                <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                    <Label Content="Voicing :" Margin="5,0,0,0"/>
+                                    <ComboBox Name="ComboBox_BaseNote" Width="90" SelectedIndex="{Binding baseNotePolicyIndex}">
+                                        <ComboBoxItem Content="None"/>
+                                        <ComboBoxItem Content="1Oct" IsSelected="True"/>
+                                        <ComboBoxItem Content="1Oct+5th"/>
+                                        <ComboBoxItem Content="2Oct"/>
+                                        <ComboBoxItem Content="2Oct+5th"/>
+                                    </ComboBox>
+                                    <Label Content="Near to :" Margin="5,0,0,0"/>
+                                    <ComboBox Name="ComboBox_BaseNearTo" SelectedIndex="{Binding baseNearToPolicyIndex}" Width="200">
+                                        <ComboBoxItem Content="Nothing"/>
+                                        <ComboBoxItem Content="First Chord"/>
+                                        <ComboBoxItem Content="Previous Chord"/>
+                                        <ComboBoxItem Content="1Oct interval from chord"/>
+                                    </ComboBox>
+                                </StackPanel>
+                            </GroupBox>
+                        </StackPanel>
+                    </Grid>
+                    <Grid Grid.Row="2" Margin="5,2,5,2" Name="ScalePanel"/>
+                    <Grid Grid.Row="3" Margin="5,0,5,10" Name="ChordPadPanel"/>
                 </Grid>
             </TabItem>
             <TabItem Header="Database" Name="DatabaseTab">
@@ -85,6 +135,7 @@
                             <Grid.RowDefinitions>
                                 <RowDefinition/>
                                 <RowDefinition/>
+                                <RowDefinition Height="100"/>
                             </Grid.RowDefinitions>
                             <GroupBox Grid.Row="0" Header="Input" Margin="10">
                                 <Grid>
@@ -115,6 +166,11 @@
                                     </StackPanel>
                                 </Grid>
                             </GroupBox>
+                            <GroupBox Grid.Row="2" Header="Convert Log">
+                                <Grid Grid.Row="1" Margin="5">
+                                    <TextBox Name="ConvertLogBox" Text="" ScrollViewer.VerticalScrollBarVisibility="Auto" IsReadOnly="True"/>
+                                </Grid>
+                            </GroupBox>
                         </Grid>
                     </Grid>
                 </Grid>
@@ -131,11 +187,13 @@
                             <CheckBox Name="CheckBox_ignoreSlashChord" IsChecked="{Binding ignoreSlashChord}" Content="分数コードがパッドに無いとき、ベース音の指定を無視する"/>
                         </StackPanel>
                     </GroupBox>
+                    <GroupBox Header="Debug Log">
+                        <Grid Grid.Row="1" Margin="5">
+                            <TextBox Name="DebugBox" Text="" ScrollViewer.VerticalScrollBarVisibility="Auto" IsReadOnly="True" Height="100"/>
+                        </Grid>
+                    </GroupBox>
                 </StackPanel>
             </TabItem>
         </TabControl>
-        <Grid Grid.Row="1" Margin="5">
-            <TextBox Name="DebugBox" Text="" ScrollViewer.VerticalScrollBarVisibility="Auto" IsReadOnly="True"/>
-        </Grid>
     </Grid>
 </Window>

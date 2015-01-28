@@ -14,6 +14,7 @@ using System.Windows.Navigation;
 using System.Windows.Shapes;
 using System.Xml;
 using System.IO;
+using System.ComponentModel;
 
 namespace ChordSuggest {
 	/// <summary>
@@ -23,8 +24,13 @@ namespace ChordSuggest {
 
 
 
-	public partial class MainWindow : Window {
-
+	public partial class MainWindow : Window,INotifyPropertyChanged{
+		public event PropertyChangedEventHandler PropertyChanged;
+		protected void OnPropertyChanged(string propertyName) {
+			PropertyChangedEventHandler handler = PropertyChanged;
+			if (handler != null)
+				handler(this, new PropertyChangedEventArgs(propertyName));
+		}
 		public class ChordPad : TextBlock {
 			public int x;
 			public int y;
@@ -58,6 +64,18 @@ namespace ChordSuggest {
 				})
 			); 
 		}
+		public static void ConvertWrite(String str) {
+			myInstance.ConvertWrite_(str);
+		}
+		private void ConvertWrite_(String str) {
+			ConvertLogBox.Dispatcher.InvokeAsync(
+				new Action(() => {
+					ConvertLogBox.AppendText(str);
+					ConvertLogBox.ScrollToEnd();
+				})
+			);
+		}
+
 
 
 		public const int maxChannelCount = 16;
@@ -98,10 +116,11 @@ namespace ChordSuggest {
 			Write("Initialize midi devices\n");
 			mm.initialize();
 
+			Write("Initialize voicing manage\n");
+			VoicingManage.createInstance();
+
 			this.MouseLeftButtonDown += new MouseButtonEventHandler(Callback_MouseDown);
 			this.MouseLeftButtonUp += new MouseButtonEventHandler(Callback_MouseUp);
-
-			if (mm.outDeviceList.Count > 0) ComboBox_outputDevice.SelectedIndex = 0;
 
 			createScaleLabel();
 			createTonePad();
@@ -116,7 +135,23 @@ namespace ChordSuggest {
 			ComboBox_Channel.DataContext = this;
 			TextBlock_Program.DataContext = this;
 			CheckBox_ignoreSlashChord.DataContext = cps;
-			RadioButton_IsMajorCheck.DataContext = this;
+			ComboBox_MajorMinor.DataContext = this;
+			TextBox_Velocity.DataContext = this;
+			TextBlock_Octave.DataContext = this;
+			ComboBox_BaseNote.DataContext = VoicingManage.getInstance();
+			ComboBox_KeepNote.DataContext = VoicingManage.getInstance();
+			TextBox_MinimumInterval.DataContext = VoicingManage.getInstance();
+			ComboBox_NearTo.DataContext = VoicingManage.getInstance();
+			ComboBox_BaseNearTo.DataContext = VoicingManage.getInstance();
+
+			if (mm.outDeviceList.Count > 0) ComboBox_outputDevice.SelectedIndex = 0;
+			noteVelocity = 100;
+			octaveShift = 0;
+			VoicingManage.getInstance().keepNotePolicyIndex = 0;
+			VoicingManage.getInstance().nearToPolicyIndex = 0;
+			VoicingManage.getInstance().minimumInterval = 0;
+			VoicingManage.getInstance().baseNotePolicyIndex = 1;
+			VoicingManage.getInstance().baseNearToPolicyIndex = 0;
 		}
 
 
@@ -305,6 +340,7 @@ namespace ChordSuggest {
 		}
 		private void Callback_NoteOffButtonClicked(object sender, MouseButtonEventArgs e) {
 			currentChord = null;
+			VoicingManage.getInstance().resetNearTo();
 			noteOff();
 		}
 
@@ -330,12 +366,31 @@ namespace ChordSuggest {
 		}
 
 		// 音声関連
+		public int noteVelocity_;
+		public int noteVelocity { 
+			get {
+				return noteVelocity_;
+			}
+			set {
+				if (value < 0) noteVelocity_ = 0;
+				else if (value >= 128) noteVelocity_ = 127;
+				else noteVelocity_ = value;
+			}
+		}
+		public int octaveShift_;
+		public int octaveShift { get { return octaveShift_; } set { octaveShift_ = value; OnPropertyChanged("octaveShift"); } }
+		private void Callback_OctaveUp(object sender, RoutedEventArgs e) {
+			octaveShift++;
+		}
+		private void Callback_OctaveDown(object sender, RoutedEventArgs e) {
+			octaveShift--;
+		}
 		private void noteOn() {
 			noteOff();
 			playingChord = currentChord;
 			if (playingChord != null) {
 //				Write("On:" + playingChord.ToString() + "\n");
-				mm.playChord(playingChord, 127, channelNumber,currentKey);
+				mm.playChord(playingChord, noteVelocity, channelNumber,currentKey+octaveShift*ChordBasic.toneCount);
 				cps.suggestNextChord(playingChord);
 				updateUIColorSuggest();
 			}
@@ -343,7 +398,8 @@ namespace ChordSuggest {
 		private void noteOff() {
 			if (playingChord != null) {
 //				Write("Off:" + playingChord.ToString() + "\n");
-				mm.stopChord(playingChord, channelNumber,currentKey);
+//				mm.stopChord(playingChord, channelNumber,currentKey+octaveShift*ChordBasic.toneCount);
+				mm.stopNotes(channelNumber);
 				updateUIColorDefault();
 				playingChord = null;
 			}
@@ -455,12 +511,12 @@ namespace ChordSuggest {
 							}
 
 							transposeKey = matchKeys[cur].id;
-//							Write("Transpose to "+ matchKeys[0].name+" with "+item+"\n");
+							ConvertWrite("Transpose to "+ matchKeys[cur].name+" with "+item+"\n");
 						}
 					} else {
 						var res = Chord.createChordFromChordName(item);
 						if (res == null) {
-//							Write(item + " cannot translate\n");
+							ConvertWrite(item + " cannot translate\n");
 						} else {
 							res.transpose((ChordBasic.toneCount-transposeKey)%ChordBasic.toneCount);
 							progression.Add(res);
@@ -470,7 +526,7 @@ namespace ChordSuggest {
 				}
 				if(progression.Count>0)chordProgressions.Add(progression);
 			}
-			Write("Text converted\n");
+			ConvertWrite("Text converted\n");
 
 			string resultString = "";
 			for (int i = 0; i < chordProgressions.Count; i++) {
@@ -514,10 +570,23 @@ namespace ChordSuggest {
 				StreamWriter sw = new StreamWriter(fileName, true);
 				sw.Write(TextBox_Converted.Text);
 				sw.Close();
-				Write("Chord progressions are saved to " + TextBox_FileName.Text+"\n");
+				ConvertWrite("Chord progressions are saved to " + TextBox_FileName.Text+"\n");
 			} catch (Exception) {
-				Write("warning - cannot access "+fileName+"\n");
+				ConvertWrite("warning - cannot access "+fileName+"\n");
 			}
+		}
+
+		private int previousChannel = 0;
+		private void Callback_ChannelChanged(object sender, SelectionChangedEventArgs e) {
+			mm.stopNotes(previousChannel);
+			previousChannel = channelNumber;
+		}
+
+		private void Callback_EnableInterval(object sender, RoutedEventArgs e) {
+			if (TextBox_MinimumInterval != null) TextBox_MinimumInterval.IsEnabled = true;
+		}
+		private void Callback_DisableInterval(object sender, RoutedEventArgs e) {
+			if(TextBox_MinimumInterval!=null)TextBox_MinimumInterval.IsEnabled = false;
 		}
 	}
 }
