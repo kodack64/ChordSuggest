@@ -5,6 +5,20 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Runtime.InteropServices;
 
+using System.Windows.Controls;
+using System.Windows.Data;
+using System.Windows.Documents;
+using System.Windows.Input;
+using System.Windows.Media;
+using System.Windows.Media.Imaging;
+using System.Windows.Navigation;
+using System.Windows.Shapes;
+using System.Windows.Controls.Primitives;
+using System.Collections.ObjectModel;
+using System.ComponentModel;
+using System.Data;
+using System.Windows;
+
 namespace ChordSuggest {
 
 	class MidiAdapter {
@@ -86,6 +100,7 @@ namespace ChordSuggest {
 		public MidiAdapter midiAdapter = new MidiAdapter();
 		public List<string> outDeviceList = new List<string>();
 		public int currentOpenDevice = -1;
+		public Canvas canvas=null;
 		public void initialize() {
 			midiAdapter.initialize();
 			int outDeviceCount = midiAdapter.midiOutDeviceCount;
@@ -110,6 +125,7 @@ namespace ChordSuggest {
 		public void playChord(Chord chord,int velocity,int channel,int transpose=0) {
 			if (chord == null) return;
 			var notes = VoicingManage.getInstance().chordToNotes(chord,transpose);
+			paintPlayedNote(notes);
 			foreach (int note in notes) {
 				midiAdapter.sendNote(note,velocity,channel);
 				playedNotes.Add(note);
@@ -125,6 +141,7 @@ namespace ChordSuggest {
 			}*/
 		}
 		public void stopNotes(int channel) {
+			clearPlayedNote();
 			foreach(int note in playedNotes){
 				midiAdapter.stopNote(note, channel);
 			}
@@ -133,7 +150,79 @@ namespace ChordSuggest {
 		public void changeProgram(int program, int channel) {
 			midiAdapter.changeProgram(program,channel);
 		}
+		public void setCanvas(Canvas _canvas) { canvas = _canvas; }
+		private int lowestKey = 0;
+		private int highestKey = 128;
+		private double position = 0;
+		private double keyWidth = 10;
+		private double blackKeyWidth = 5;
+		private double keyHeight = 30;
+		private double blackKeyHeight = 20;
+		public void paintKeyboard() {
+			Rectangle rect;
+			for (int i = lowestKey; i < highestKey; i++) {
+
+				if (isWhiteKey(i)) {
+					rect = new Rectangle() {Stroke = Brushes.Black };
+					rect.Width = keyWidth;
+					rect.Height = keyHeight;
+					Canvas.SetLeft(rect, position);
+					Canvas.SetTop(rect,0);
+					canvas.Children.Add(rect);
+					position += keyWidth;
+				} else {
+					rect = new Rectangle() { Fill = Brushes.Black };
+					rect.Width = blackKeyWidth;
+					rect.Height = blackKeyHeight;
+					Canvas.SetLeft(rect, position-blackKeyWidth/2);
+					Canvas.SetTop(rect, 0);
+					canvas.Children.Add(rect);
+				}
+			}
+			whiteKeyCountInOctave = 0;
+			for (int i = 0; i < ChordBasic.toneCount; i++) {
+				if (isWhiteKey(i)) whiteKeyCountInOctave++;
+			}
+		}
+		private bool isWhiteKey(int note) {
+			int myTone = (note + ChordBasic.toneCount * 12 - ChordBasic.toneList[0].noteNumber) % ChordBasic.toneCount;
+			return (ChordBasic.toneList[myTone].intervalPrefix == Tone.IntervalPrefix.perfect || ChordBasic.toneList[myTone].intervalPrefix == Tone.IntervalPrefix.major);
+		}
+		private List<UIElement> uieList = new List<UIElement>();
+		private int whiteKeyCountInOctave;
+		private double ellipseSize = 10;
+		private double ellipseHeight = 20;
+		private double blackKeyEllipseHeight = 10;
+		public void paintPlayedNote(int[] notes) {
+			foreach (UIElement uie in uieList) {
+				canvas.Children.Remove(uie);
+			}
+			foreach (int note in notes) {
+				double position = 0;
+				int oct = note / ChordBasic.toneCount;
+				position += oct * whiteKeyCountInOctave * keyWidth;
+				for (int i = oct * ChordBasic.toneCount; i < note; i++) {
+					if (isWhiteKey(i)) position += keyWidth;
+				}
+				if (!isWhiteKey(note)) position -= keyWidth / 2;
+				Ellipse el = new Ellipse();
+				el.Fill = Brushes.Red;
+				el.Width = ellipseSize;
+				el.Height = ellipseSize;
+				Canvas.SetLeft(el, position);
+				if(isWhiteKey(note))Canvas.SetTop(el, ellipseHeight);
+				else Canvas.SetTop(el, blackKeyEllipseHeight);
+				canvas.Children.Add(el);
+				uieList.Add(el);
+			}
+		}
+		public void clearPlayedNote() {
+			foreach (UIElement uie in uieList) {
+				canvas.Children.Remove(uie);
+			}
+		}
 	}
+
 	class VoicingManage {
 		private VoicingManage() { }
 		private static VoicingManage myInstance=null;
@@ -141,9 +230,10 @@ namespace ChordSuggest {
 			if (myInstance == null) myInstance = new VoicingManage();
 		}
 		public static VoicingManage getInstance() { return myInstance; }
-		public int baseNotePolicyIndex { get; set; }
 		public int keepNotePolicyIndex { get; set; }
 		public int nearToPolicyIndex { get; set; }
+		public int expandToPolicyIndex { get; set; }
+		public int baseNotePolicyIndex { get; set; }
 		public int baseNearToPolicyIndex { get; set; }
 		public enum BaseNotePolicy {
 			_None,
@@ -169,9 +259,15 @@ namespace ChordSuggest {
 			_Previous,
 			_Chord
 		}
-		public BaseNotePolicy baseNotePolicy { get { return (BaseNotePolicy)(Enum.GetValues(typeof(BaseNotePolicy)).GetValue(baseNotePolicyIndex)); } }
+		public enum ExpandToPolicy {
+			_Lower,
+			_Upper,
+			_Both
+		}
 		public KeepNotePolicy keepNotePolicy { get { return (KeepNotePolicy)(Enum.GetValues(typeof(KeepNotePolicy)).GetValue(keepNotePolicyIndex)); } }
 		public NearToPolicy nearToPolicy { get { return (NearToPolicy)(Enum.GetValues(typeof(NearToPolicy)).GetValue(nearToPolicyIndex)); } }
+		public ExpandToPolicy expandToPolicy { get { return (ExpandToPolicy)(Enum.GetValues(typeof(ExpandToPolicy)).GetValue(expandToPolicyIndex)); } }
+		public BaseNotePolicy baseNotePolicy { get { return (BaseNotePolicy)(Enum.GetValues(typeof(BaseNotePolicy)).GetValue(baseNotePolicyIndex)); } }
 		public BaseNearToPolicy baseNearToPolicy { get { return (BaseNearToPolicy)(Enum.GetValues(typeof(BaseNearToPolicy)).GetValue(baseNearToPolicyIndex)); } }
 		public int minimumInterval { get; set; }
 		private double lastChordCenter = 0;
@@ -230,23 +326,39 @@ namespace ChordSuggest {
 				rtn.AddRange(chordNotes);
 			}
 
-
+			// rotate chord
 			rtn = rtn.Distinct().ToList();
 			rtn.Sort();
-			for (int i = rtn.Count - 1; i >= 1; i--) {
-				if (rtn[i] - rtn[i - 1] < minimumInterval) {
-					rtn[i - 1] -= oct;
-					/*					if (keepNotePolicy == KeepNotePolicy._KeepRootTop && i == rtn.Count - 1) {
-											rtn[i - 1] -= oct;
-										} else {
-											if (minimumInterval < oct / 2) {
-												rtn[i] -= oct;
-											} else {
-												rtn[i-1] -= oct;
-											}
-										}*/
-					rtn.Sort();
-					i++;
+			if (expandToPolicy == ExpandToPolicy._Lower) {
+				for (int i = rtn.Count - 1; i >= 1; i--) {
+					if (rtn[i] - rtn[i - 1] < minimumInterval) {
+						rtn[i - 1] -= oct;
+						rtn.Sort();
+						i++;
+					}
+				}
+			} else if (expandToPolicy == ExpandToPolicy._Upper) {
+				for (int i = 0; i + 1 < rtn.Count; i++) {
+					if (rtn[i + 1] - rtn[i] < minimumInterval) {
+						rtn[i + 1] += oct;
+						rtn.Sort();
+						i--;
+					}
+				}
+			} else {
+				for (int i = 0; i + 1 < rtn.Count; i++) {
+					if (rtn[i + 1] - rtn[i] < minimumInterval && rtn[i+1]>=chordRoot) {
+						rtn[i + 1] += oct;
+						rtn.Sort();
+						i++;
+					}
+				}
+				for (int i = rtn.Count - 1; i >= 1; i--) {
+					if (rtn[i] - rtn[i - 1] < minimumInterval && rtn[i-1]<=chordRoot) {
+						rtn[i - 1] -= oct;
+						rtn.Sort();
+						i--;
+					}
 				}
 			}
 

@@ -143,6 +143,7 @@ namespace ChordSuggest {
 			TextBox_MinimumInterval.DataContext = VoicingManage.getInstance();
 			ComboBox_NearTo.DataContext = VoicingManage.getInstance();
 			ComboBox_BaseNearTo.DataContext = VoicingManage.getInstance();
+			ComboBox_ExpandTo.DataContext = VoicingManage.getInstance();
 
 			if (mm.outDeviceList.Count > 0) ComboBox_outputDevice.SelectedIndex = 0;
 			noteVelocity = 100;
@@ -152,6 +153,10 @@ namespace ChordSuggest {
 			VoicingManage.getInstance().minimumInterval = 0;
 			VoicingManage.getInstance().baseNotePolicyIndex = 1;
 			VoicingManage.getInstance().baseNearToPolicyIndex = 0;
+			VoicingManage.getInstance().expandToPolicyIndex = 0;
+
+			mm.setCanvas(KeyboardCanvas);
+			mm.paintKeyboard();
 		}
 
 
@@ -582,11 +587,5 @@ namespace ChordSuggest {
 			previousChannel = channelNumber;
 		}
 
-		private void Callback_EnableInterval(object sender, RoutedEventArgs e) {
-			if (TextBox_MinimumInterval != null) TextBox_MinimumInterval.IsEnabled = true;
-		}
-		private void Callback_DisableInterval(object sender, RoutedEventArgs e) {
-			if(TextBox_MinimumInterval!=null)TextBox_MinimumInterval.IsEnabled = false;
-		}
 	}
 }

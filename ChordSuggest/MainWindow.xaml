@@ -15,6 +15,7 @@
                         <RowDefinition Height="100"/>
                         <RowDefinition Height="30"/>
                         <RowDefinition Height="*"/>
+                        <RowDefinition Height="60"/>
                     </Grid.RowDefinitions>
                     <Grid Grid.Row="0" Margin="5,0,5,0" Name="PlaySettingPanel">
                         <Grid.ColumnDefinitions>
@@ -59,10 +60,10 @@
                                 <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
                                     <Label Content="Voicing :" Margin="5,0,0,0"/>
                                     <ComboBox Name="ComboBox_KeepNote" SelectedIndex="{Binding keepNotePolicyIndex}" Width="200">
-                                        <ComboBoxItem Content="Default" IsSelected="True" Selected="Callback_EnableInterval"/>
-                                        <ComboBoxItem Content="Keep around key root" IsSelected="True" Selected="Callback_EnableInterval"/>
-                                        <ComboBoxItem Content="Keep around chord root" Selected="Callback_EnableInterval"/>
-                                        <ComboBoxItem Content="Move root to top" Selected="Callback_EnableInterval"/>
+                                        <ComboBoxItem Content="Default" IsSelected="True"/>
+                                        <ComboBoxItem Content="Keep around key root" IsSelected="True"/>
+                                        <ComboBoxItem Content="Keep around chord root"/>
+                                        <ComboBoxItem Content="Move root to top"/>
                                     </ComboBox>
                                     <Label Content="Near to :" Margin="5,0,0,0"/>
                                     <ComboBox Name="ComboBox_NearTo" SelectedIndex="{Binding nearToPolicyIndex}" Width="120">
@@ -71,7 +72,13 @@
                                         <ComboBoxItem Content="Previous Chord"/>
                                     </ComboBox>
                                     <Label Content=" Min.Interval :" Margin="5,0,0,0"/>
-                                    <TextBox Name="TextBox_MinimumInterval" Text="{Binding minimumInterval,Mode=TwoWay,UpdateSourceTrigger=PropertyChanged}" Width="50"/>
+                                    <TextBox Name="TextBox_MinimumInterval" Text="{Binding minimumInterval,Mode=TwoWay,UpdateSourceTrigger=PropertyChanged}" Width="30"/>
+                                    <Label Content=" Expand to :" Margin="5,0,0,0"/>
+                                    <ComboBox Name="ComboBox_ExpandTo" SelectedIndex="{Binding expandToPolicyIndex}" Width="75">
+                                        <ComboBoxItem Content="Lower"/>
+                                        <ComboBoxItem Content="Upper"/>
+                                        <ComboBoxItem Content="Both"/>
+                                    </ComboBox>
                                 </StackPanel>
                             </GroupBox>
                             <GroupBox Header="Base Voicing">
@@ -97,6 +104,9 @@
                     </Grid>
                     <Grid Grid.Row="2" Margin="5,2,5,2" Name="ScalePanel"/>
                     <Grid Grid.Row="3" Margin="5,0,5,10" Name="ChordPadPanel"/>
+                    <Grid Grid.Row="4" Margin="5,0,5,10" Name="KeyboardPanel">
+                        <Canvas Name="KeyboardCanvas"/>
+                    </Grid>
                 </Grid>
             </TabItem>
             <TabItem Header="Database" Name="DatabaseTab">
