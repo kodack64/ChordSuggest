@@ -8,13 +8,31 @@ EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
+		Debug|ARM = Debug|ARM
+		Debug|Mixed Platforms = Debug|Mixed Platforms
+		Debug|Win32 = Debug|Win32
+		Debug|x64 = Debug|x64
 		Release|Any CPU = Release|Any CPU
+		Release|ARM = Release|ARM
+		Release|Mixed Platforms = Release|Mixed Platforms
+		Release|Win32 = Release|Win32
+		Release|x64 = Release|x64
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
 		{A36F7AFB-83EF-4EF5-8FD2-23E92269398A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{A36F7AFB-83EF-4EF5-8FD2-23E92269398A}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A36F7AFB-83EF-4EF5-8FD2-23E92269398A}.Debug|ARM.ActiveCfg = Debug|Any CPU
+		{A36F7AFB-83EF-4EF5-8FD2-23E92269398A}.Debug|Mixed Platforms.ActiveCfg = Debug|Any CPU
+		{A36F7AFB-83EF-4EF5-8FD2-23E92269398A}.Debug|Mixed Platforms.Build.0 = Debug|Any CPU
+		{A36F7AFB-83EF-4EF5-8FD2-23E92269398A}.Debug|Win32.ActiveCfg = Debug|Any CPU
+		{A36F7AFB-83EF-4EF5-8FD2-23E92269398A}.Debug|x64.ActiveCfg = Debug|Any CPU
 		{A36F7AFB-83EF-4EF5-8FD2-23E92269398A}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{A36F7AFB-83EF-4EF5-8FD2-23E92269398A}.Release|Any CPU.Build.0 = Release|Any CPU
+		{A36F7AFB-83EF-4EF5-8FD2-23E92269398A}.Release|ARM.ActiveCfg = Release|Any CPU
+		{A36F7AFB-83EF-4EF5-8FD2-23E92269398A}.Release|Mixed Platforms.ActiveCfg = Release|Any CPU
+		{A36F7AFB-83EF-4EF5-8FD2-23E92269398A}.Release|Mixed Platforms.Build.0 = Release|Any CPU
+		{A36F7AFB-83EF-4EF5-8FD2-23E92269398A}.Release|Win32.ActiveCfg = Release|Any CPU
+		{A36F7AFB-83EF-4EF5-8FD2-23E92269398A}.Release|x64.ActiveCfg = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

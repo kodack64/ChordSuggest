@@ -107,6 +107,11 @@ namespace ChordSuggest {
 			for (int i = 0; i < outDeviceCount; i++) {
 				outDeviceList.Add(midiAdapter.getMidiOutDeviceName(i));
 			}
+
+			whiteKeyCountInOctave = 0;
+			for (int i = 0; i < ChordBasic.toneCount; i++) {
+				if (isWhiteKey(i)) whiteKeyCountInOctave++;
+			}
 		}
 		public void open(int id) {
 			close();
@@ -153,15 +158,23 @@ namespace ChordSuggest {
 		public void setCanvas(Canvas _canvas) { canvas = _canvas; }
 		private int lowestKey = 0;
 		private int highestKey = 128;
-		private double position = 0;
 		private double keyWidth = 10;
 		private double blackKeyWidth = 5;
 		private double keyHeight = 30;
 		private double blackKeyHeight = 20;
+		private double ellipseSize = 10;
+		private double ellipseHeight = 20;
+		private double blackKeyEllipseHeight = 10;
+		private List<UIElement> keyboardUieList = new List<UIElement>();
 		public void paintKeyboard() {
+			foreach (UIElement uie in keyboardUieList) {
+				canvas.Children.Remove(uie);
+			}
+			double position = 0;
+			keyWidth = canvas.ActualWidth / (getWhiteKeyCount(highestKey)-getWhiteKeyCount(lowestKey));
+			blackKeyWidth = keyWidth / 2;
 			Rectangle rect;
 			for (int i = lowestKey; i < highestKey; i++) {
-
 				if (isWhiteKey(i)) {
 					rect = new Rectangle() {Stroke = Brushes.Black };
 					rect.Width = keyWidth;
@@ -169,6 +182,7 @@ namespace ChordSuggest {
 					Canvas.SetLeft(rect, position);
 					Canvas.SetTop(rect,0);
 					canvas.Children.Add(rect);
+					keyboardUieList.Add(rect);
 					position += keyWidth;
 				} else {
 					rect = new Rectangle() { Fill = Brushes.Black };
@@ -177,34 +191,32 @@ namespace ChordSuggest {
 					Canvas.SetLeft(rect, position-blackKeyWidth/2);
 					Canvas.SetTop(rect, 0);
 					canvas.Children.Add(rect);
+					keyboardUieList.Add(rect);
 				}
-			}
-			whiteKeyCountInOctave = 0;
-			for (int i = 0; i < ChordBasic.toneCount; i++) {
-				if (isWhiteKey(i)) whiteKeyCountInOctave++;
 			}
 		}
 		private bool isWhiteKey(int note) {
-			int myTone = (note + ChordBasic.toneCount * 12 - ChordBasic.toneList[0].noteNumber) % ChordBasic.toneCount;
+			int myTone = (((note - ChordBasic.toneList[0].noteNumber) % ChordBasic.toneCount)+ChordBasic.toneCount)%ChordBasic.toneCount;
 			return (ChordBasic.toneList[myTone].intervalPrefix == Tone.IntervalPrefix.perfect || ChordBasic.toneList[myTone].intervalPrefix == Tone.IntervalPrefix.major);
+		}
+		private int getWhiteKeyCount(int note) {
+			int octFromLowestKey = (note - lowestKey) / ChordBasic.toneCount;
+			int keyCount =  octFromLowestKey * whiteKeyCountInOctave;
+			for (int i = octFromLowestKey * ChordBasic.toneCount + lowestKey ; i < note; i++) {
+				if (isWhiteKey(i)) keyCount++;
+			}
+			return keyCount;
 		}
 		private List<UIElement> uieList = new List<UIElement>();
 		private int whiteKeyCountInOctave;
-		private double ellipseSize = 10;
-		private double ellipseHeight = 20;
-		private double blackKeyEllipseHeight = 10;
 		public void paintPlayedNote(int[] notes) {
 			foreach (UIElement uie in uieList) {
 				canvas.Children.Remove(uie);
 			}
 			foreach (int note in notes) {
-				double position = 0;
-				int oct = note / ChordBasic.toneCount;
-				position += oct * whiteKeyCountInOctave * keyWidth;
-				for (int i = oct * ChordBasic.toneCount; i < note; i++) {
-					if (isWhiteKey(i)) position += keyWidth;
-				}
-				if (!isWhiteKey(note)) position -= keyWidth / 2;
+				double position = getWhiteKeyCount(note)*keyWidth;
+				if (isWhiteKey(note)) position += keyWidth / 2;
+				position -= ellipseSize / 2;
 				Ellipse el = new Ellipse();
 				el.Fill = Brushes.Red;
 				el.Width = ellipseSize;

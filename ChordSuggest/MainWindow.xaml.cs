@@ -44,7 +44,6 @@ namespace ChordSuggest {
 				y = _y;
 				chord = _chord;
 				Text = chord.ToString();
-				Margin = new Thickness(2);
 				rootId = chord.root.id;
 				harmonyId = getPadHarmonyId(chord.harmony);
 				roleInMajor = "";
@@ -119,8 +118,11 @@ namespace ChordSuggest {
 			Write("Initialize voicing manage\n");
 			VoicingManage.createInstance();
 
-			this.MouseLeftButtonDown += new MouseButtonEventHandler(Callback_MouseDown);
+			ChordPadPanel.MouseLeftButtonDown += new MouseButtonEventHandler(Callback_MouseDown);
 			this.MouseLeftButtonUp += new MouseButtonEventHandler(Callback_MouseUp);
+			this.LostMouseCapture += new MouseEventHandler(Callback_MouseLost);
+			this.AllowDrop = true;
+			this.Drop += new DragEventHandler(Callback_FileDrop);
 
 			createScaleLabel();
 			createTonePad();
@@ -156,9 +158,26 @@ namespace ChordSuggest {
 			VoicingManage.getInstance().expandToPolicyIndex = 0;
 
 			mm.setCanvas(KeyboardCanvas);
+/*			Dispatcher.BeginInvoke(
+			   new Action(() => {
+					mm.paintKeyboard();
+			   })
+			);*/
+		}
+		private void Window_SizeChanged(object sender,SizeChangedEventArgs args) {
 			mm.paintKeyboard();
 		}
-
+		private List<Window> analyzeWindowList = new List<Window>();
+		private void Callback_FileDrop(object sender, DragEventArgs arg) {
+			string[] files = arg.Data.GetData(DataFormats.FileDrop) as string[];
+			foreach (string file in files) {
+				if (file.EndsWith(".wave") || file.EndsWith(".wav")) {
+					Window win = new WaveAnalyze(file);
+					analyzeWindowList.Add(win);
+					win.Show();
+				}
+			}
+		}
 
 		// UI関連
 		private List<Label> scaleLabels= new List<Label>();
@@ -182,7 +201,7 @@ namespace ChordSuggest {
 		}
 		private string[] RomanNumber = { "I", "II", "III", "IV", "V", "VI", "VII" };
 		private int[] majorDiatonic = { 0, 2, 4, 5, 7, 9, 11 };
-		private int[] minorDiatonic = { 0, 2, 3, 5, 7, 8, 11 };
+		private int[] minorDiatonic = { 0, 2, 3, 5, 7, 8, 10 };
 		private void makeScaleLabel() {
 			int scaleCount = 0;
 			for (int key = 0; key < ChordBasic.toneCount; key++) {
@@ -343,6 +362,9 @@ namespace ChordSuggest {
 		public void Callback_MouseUp(object sender, MouseButtonEventArgs arg) {
 			if (TabControl.SelectedIndex == 0) if (!holdMode) noteOff();
 		}
+		public void Callback_MouseLost(object sender, MouseEventArgs arg) {
+			if (TabControl.SelectedIndex == 0) if (!holdMode) noteOff();
+		}
 		private void Callback_NoteOffButtonClicked(object sender, MouseButtonEventArgs e) {
 			currentChord = null;
 			VoicingManage.getInstance().resetNearTo();
@@ -366,6 +388,9 @@ namespace ChordSuggest {
 		}
 
 		private void Window_Closing(object sender, System.ComponentModel.CancelEventArgs e) {
+			foreach (Window win in analyzeWindowList) {
+				win.Close();
+			}
 			mm.close();
 			cpd.saveFileSwitch();
 		}
@@ -586,6 +611,5 @@ namespace ChordSuggest {
 			mm.stopNotes(previousChannel);
 			previousChannel = channelNumber;
 		}
-
 	}
 }

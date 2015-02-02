@@ -2,7 +2,8 @@
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         Title="Chord Suggest" Height="900" Width="800"
-        Closing="Window_Closing">
+        Closing="Window_Closing"
+        SizeChanged="Window_SizeChanged">
     <Grid>
         <TabControl Grid.Row="0" HorizontalAlignment="Stretch"
                     Name="TabControl"
