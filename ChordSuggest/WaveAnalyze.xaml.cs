@@ -13,6 +13,7 @@ using System.Windows.Media.Imaging;
 using System.Windows.Shapes;
 using System.IO;
 using System.Runtime.InteropServices;
+using System.Diagnostics;
 
 namespace ChordSuggest {
 
@@ -27,6 +28,9 @@ namespace ChordSuggest {
 			loadFile();
 		}
 		private void loadFile() {
+			Stopwatch wa = new Stopwatch();
+			double loadTime, convertTime, fftTime;
+			wa.Start();
 			BinaryReader reader = new BinaryReader(File.Open(myTargetFile,FileMode.Open));
 			int chunkID = reader.ReadInt32();
 			int fileSize = reader.ReadInt32();
@@ -40,7 +44,6 @@ namespace ChordSuggest {
 			int fmtBlockAlign = reader.ReadInt16();
 			int bitDepth = reader.ReadInt16();
 			if (fmtSize == 18) {
-				// Read any extra values
 				int fmtExtraSize = reader.ReadInt16();
 				reader.ReadBytes(fmtExtraSize);
 			}
@@ -49,7 +52,10 @@ namespace ChordSuggest {
 			byte[] byteArray = new byte[dataSize];
 			byteArray = reader.ReadBytes(dataSize);
 			reader.Close();
-
+			wa.Stop();
+			loadTime = wa.ElapsedMilliseconds * 1e-3;
+			wa.Reset();
+			wa.Start();
 			int byteDepth = bitDepth / 8;
 			int dataCount = dataSize / byteDepth/channels;
 			double[,] waveData = new double[channels,dataCount];
@@ -57,49 +63,84 @@ namespace ChordSuggest {
 			int cur =0;
 			for (int i = 0; i < dataCount; i++) {
 				for (int c = 0; c < channels; c++) {
-					if (byteDepth == 2) {
+					if (byteDepth == 1) {
+						waveData[c, i] = byteArray[cur] / 128.0-1.0;
+					}else if (byteDepth == 2) {
 						waveData[c, i] = ((Int16)(byteArray[cur] + 256 * byteArray[cur + 1])) / 32768.0;
-						cur += 2;
+					}else if (byteDepth == 3) {
+						double temp = ((Int32)(byteArray[cur] + 256 * byteArray[cur + 1] + 65536 * byteArray[cur + 2])) / 8388608.0;
+						waveData[c, i] = temp <1.0?temp:temp-2.0;
+					}else if (byteDepth == 4) {
+						waveData[c, i] = BitConverter.ToSingle(byteArray, cur);
 					}
-/*					Int64 val =0;
-					Int64 currentIndex = 1;
-					for (int b = 0; b < byteDepth; b++) {
-						val+= byteArray[cur] * currentIndex;
-						if (b + 1 < byteDepth) currentIndex = currentIndex << 8;
-						cur++;
-					}*/
-//						double temp = 2.0 * val / (1 << bitDepth);
-//						waveData[c, i] = temp < 1.0 ? temp : -2.0 + temp;
+					cur += byteDepth;
 				}
 				targetData[i] = waveData[0,i];
 			}
-
-//			int shiftBit = 12;
-//			int blockBit = 13;
-			int shiftBit = 14;
+			wa.Stop();
+			convertTime = wa.ElapsedMilliseconds * 1e-3;
+			wa.Reset();
+			wa.Start();
+			int shiftBit = 10;
 			int blockBit = 14;
+//			int shiftBit = 14;
+//			int blockBit = 14;
+			int blockSize = 1 << blockBit;
+			int shiftSize = 1 << shiftBit;
 			int start = 0;
-			double[] block = new double[(1 << blockBit)];
-			double[] spectrum;
-			StreamWriter sw = new StreamWriter("test.txt");
-			while (start + (1 << blockBit) < dataCount) {
-				Array.Copy(targetData,start,block,0,(1<<blockBit));
-				getSpectrum(block,out spectrum,blockBit);
-				start += (1 << shiftBit);
-
-				double basefreq = 1.0 / ((1 << blockBit) * 1.0 / sampleRate);
-				for (int i = 0; i < Math.Min((int)(1000/basefreq),(1<<blockBit)/2); i++) {
-					sw.Write(spectrum[i].ToString()+" ");
+			int blockCount = (dataCount-blockSize) / shiftSize;
+			int blockCur = 0;
+			int blockPer = 1;
+			double baseFreq = 1.0 * sampleRate / blockSize;
+			double[] block = new double[blockSize];
+			double[] spectrum = new double[blockSize];
+//			StreamWriter sw;
+//			sw = new StreamWriter("spectrum.txt");
+			setFFTBitSize(blockBit);
+			while (start + blockSize < dataCount) {
+				for (int i = 0; i<blockSize;i++ ){
+					block[i] = targetData[start+i] * (0.5-0.5*Math.Cos(2*Math.PI*i/blockSize));
 				}
-				sw.WriteLine();
+				getSpectrum(block,spectrum,blockBit);
+				start += shiftSize;
+
+//				for (int i = 0; i < Math.Min((int)(1000/basefreq),(1<<blockBit)/2); i++) {
+//					sw.Write(spectrum[i].ToString()+" ");
+//				}
+//				sw.WriteLine();
+				blockCur++;
+				if (blockCount * blockPer <= blockCur*100) {
+					Console.WriteLine("{0}% ({1}/{2}block) completed at {3}sec",blockPer,blockCur,blockCount,wa.ElapsedMilliseconds*1e-3);
+					blockPer++;
+				}
 			}
-			sw.Close();
+//			sw.Close();
+			wa.Stop();
+			fftTime = wa.ElapsedMilliseconds * 1e-3;
+
+			double waveTime = dataCount/44100.0;
+			Console.WriteLine("{0}{1}{3}",loadTime,convertTime,fftTime);
+
+
+/*			sw = new StreamWriter("wave.txt");
+			for (int i = 0; i<Math.Min(100000,dataCount);i++ ) {
+				sw.WriteLine((i*1.0/sampleRate).ToString()+" "+targetData[i].ToString());
+			}
+			sw.Close();*/
 		}
-		private void getSpectrum(double[] din,out double[] spectrum, int bitSize) {
-			int dataSize = 1 << bitSize;
-			int[] reverseBitArray = BitScrollArray(dataSize);
-			double[] outputRe = new double[1<<bitSize];
-			double[] outputIm = new double[1<<bitSize];
+		int bitSize;
+		int dataSize;
+		int[] reverseBitArray;
+		double[] outputRe;
+		double[] outputIm;
+		private void setFFTBitSize(int bitSize_) {
+			bitSize = bitSize_;
+			dataSize = 1 << bitSize;
+			reverseBitArray = BitScrollArray(1<<bitSize);
+			outputRe = new double[1 << bitSize];
+			outputIm = new double[1 << bitSize];
+		}
+		private void getSpectrum(double[] din,double[] spectrum, int bitSize) {
 			for (int i = 0; i < dataSize; i++) {
 				outputRe[i] = din[reverseBitArray[i]];
 				outputIm[i] = 0;
@@ -134,8 +175,7 @@ namespace ChordSuggest {
 					wIm = tempWIm;
 				}
 			}
-			spectrum = new double[dataSize];
-			for (int i = 0; i < dataSize; i++) {
+			for (int i = 0; i < dataSize/2; i++) {
 				spectrum[i] = Math.Sqrt(outputRe[i]*outputRe[i]+outputIm[i]*outputIm[i]);
 			}
 		}
