@@ -3,6 +3,9 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         Title="WaveAnalyze" Height="300" Width="300">
     <Grid>
-        
+        <StackPanel VerticalAlignment="Center" Orientation="Vertical">
+            <Label Name="ProgressLabel" Content="Progress"/>
+            <ProgressBar Name="ProgressBar_Convert" Height="16" Margin="10"/>
+        </StackPanel>
     </Grid>
 </Window>
