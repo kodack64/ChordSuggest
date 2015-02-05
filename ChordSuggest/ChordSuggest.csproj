@@ -53,6 +53,8 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </ApplicationDefinition>
+    <Compile Include="MidiAdapter.cs" />
+    <Compile Include="VoicingManage.cs" />
     <Compile Include="WaveAnalyze.xaml.cs">
       <DependentUpon>WaveAnalyze.xaml</DependentUpon>
     </Compile>

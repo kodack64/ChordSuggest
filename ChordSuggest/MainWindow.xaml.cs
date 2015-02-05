@@ -134,6 +134,7 @@ namespace ChordSuggest {
 			CheckBox_HoldMode.DataContext = this;
 			fileDatabaseList.ItemsSource = cpd.fileStates;
 			ComboBox_outputDevice.ItemsSource = mm.outDeviceList;
+			ComboBox_inputDevice.ItemsSource = mm.inDeviceList;
 			ComboBox_Channel.DataContext = this;
 			TextBlock_Program.DataContext = this;
 			CheckBox_ignoreSlashChord.DataContext = cps;
@@ -148,6 +149,7 @@ namespace ChordSuggest {
 			ComboBox_ExpandTo.DataContext = VoicingManage.getInstance();
 
 			if (mm.outDeviceList.Count > 0) ComboBox_outputDevice.SelectedIndex = 0;
+			if (mm.inDeviceList.Count > 0) ComboBox_inputDevice.SelectedIndex = 0;
 			noteVelocity = 100;
 			octaveShift = 0;
 			VoicingManage.getInstance().keepNotePolicyIndex = 0;
@@ -382,9 +384,13 @@ namespace ChordSuggest {
 			cps.read(cpd.enabledFileList);
 			updateUIColorDefault();
 		}
-		private void Callback_DeviceChanged(object sender, SelectionChangedEventArgs e) {
+		private void Callback_OutputDeviceChanged(object sender, SelectionChangedEventArgs e) {
 			Write("Connect midi device\n");
 			mm.open(ComboBox_outputDevice.SelectedIndex);
+		}
+		private void Callback_InputDeviceChanged(object sender, SelectionChangedEventArgs e) {
+			Write("Connect midi device\n");
+//			mm.open(ComboBox_inputDevice.SelectedIndex);
 		}
 
 		private void Window_Closing(object sender, System.ComponentModel.CancelEventArgs e) {

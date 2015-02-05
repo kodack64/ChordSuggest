@@ -1,11 +1,95 @@
 ﻿<Window x:Class="ChordSuggest.WaveAnalyze"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        Title="WaveAnalyze" Height="300" Width="300">
+        Title="WaveAnalyze" Height="800" Width="800">
     <Grid>
-        <StackPanel VerticalAlignment="Center" Orientation="Vertical">
-            <Label Name="ProgressLabel" Content="Progress"/>
-            <ProgressBar Name="ProgressBar_Convert" Height="16" Margin="10"/>
-        </StackPanel>
+        <TabControl>
+            <TabItem Header="Spctrum" IsEnabled="False" Name="Tab_Spectrum">
+                <Canvas/>
+            </TabItem>
+            <TabItem Header="FFT" IsSelected="True">
+                <StackPanel>
+                    <GroupBox Header="File info">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="200"/>
+                                <ColumnDefinition/>
+                            </Grid.ColumnDefinitions>
+                            <Grid.RowDefinitions>
+                                <RowDefinition/>
+                                <RowDefinition/>
+                                <RowDefinition/>
+                                <RowDefinition/>
+                                <RowDefinition/>
+                                <RowDefinition/>
+                            </Grid.RowDefinitions>
+                            <Label Grid.Row="0" Grid.Column="0" Content="ファイル名"/>
+                            <Label Grid.Row="0" Grid.Column="1" Name="Label_FileName" Content="Now Loading..."/>
+                            <Label Grid.Row="1" Grid.Column="0" Content="再生時間"/>
+                            <Label Grid.Row="1" Grid.Column="1" Name="Label_PlayTime"/>
+                            <Label Grid.Row="2" Grid.Column="0" Content="チャンネル数"/>
+                            <Label Grid.Row="2" Grid.Column="1" Name="Label_ChannelCount"/>
+                            <Label Grid.Row="3" Grid.Column="0" Content="チャンネルあたりのサンプル数"/>
+                            <Label Grid.Row="3" Grid.Column="1" Name="Label_SampleCount"/>
+                            <Label Grid.Row="4" Grid.Column="0" Content="ビット深度"/>
+                            <Label Grid.Row="4" Grid.Column="1" Name="Label_BitDepth"/>
+                            <Label Grid.Row="5" Grid.Column="0" Content="サンプリングレート"/>
+                            <Label Grid.Row="5" Grid.Column="1" Name="Label_SamplingRate"/>
+                        </Grid>
+                    </GroupBox>
+                    <GroupBox Header="Plan">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="200"/>
+                                <ColumnDefinition/>
+                            </Grid.ColumnDefinitions>
+                            <Grid.RowDefinitions>
+                                <RowDefinition/>
+                                <RowDefinition/>
+                                <RowDefinition/>
+                                <RowDefinition/>
+                                <RowDefinition/>
+                                <RowDefinition/>
+                            </Grid.RowDefinitions>
+                            <Label Grid.Row="0" Grid.Column="0" Content="解析するトラック" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                            <ComboBox Grid.Row="0" Grid.Column="1" Name="ComboBox_TargetArray" Margin="10"/>
+                            <Label Grid.Row="1" Grid.Column="0" Content="FTするサンプル数" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                            <StackPanel  Grid.Row="1" Grid.Column="1">
+                                <Slider Name="Slider_BlockBit" Margin="10" Value="{Binding blockBitSetting,Mode=TwoWay,UpdateSourceTrigger=PropertyChanged}"/>
+                                <Label Name="Label_BlockLength" Margin="10"/>
+                                <Label>
+                                    大きいほど低域の解像度が良くなりますが、時間的に平坦化されて時間軸が平坦化され、また計算時間もかかります。
+                                </Label>
+                            </StackPanel>
+                            <Label Grid.Row="2" Grid.Column="0" Content="時間の刻み" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                            <StackPanel  Grid.Row="2" Grid.Column="1">
+                                <Slider Name="Slider_ShiftBit" Margin="10" Value="{Binding shiftBitSetting,Mode=TwoWay,UpdateSourceTrigger=PropertyChanged}"/>
+                                <Label Name="Label_ShiftLength" Margin="10"/>
+                                <Label>
+                                    大きいほどブロック数が減り計算が早くなりますが、時間分解能が悪くなります。
+                                </Label>
+                                <Label>
+                                    また、FTするサンプル数より大きいと一部のサンプルが無視されます。
+                                </Label> 
+                            </StackPanel>
+                            <Label Grid.Row="3" Grid.Column="0" Content="窓関数" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                            <ComboBox Grid.Row="3" Grid.Column="1" Name="ComboBox_WindowFunction" Margin="10"/>
+                            <Label Grid.Row="4" Grid.Column="0" Content="並列化する" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                            <CheckBox Grid.Row="4" Grid.Column="1" Name="CheckBox_UseParallelize" Margin="10" IsChecked="True"/>
+                            <StackPanel Grid.Row="7" Grid.Column="0"  Grid.ColumnSpan="2" Orientation="Horizontal" HorizontalAlignment="Center">
+                                <Button Content="実行する" Name="Button_StartWork" IsEnabled="False" Click="Callback_WorkerStart" Margin="0,0,30,0"/>
+                                <Button Content="停止する" Name="Button_CancelWork" IsEnabled="False" Click="Callback_WorkerCancel"/>
+                            </StackPanel>
+                        </Grid>
+                    </GroupBox>
+                    <GroupBox Header="Execute">
+                        <StackPanel VerticalAlignment="Center" Orientation="Vertical" HorizontalAlignment="Stretch">
+                            <Label Name="Label_ConvertProgress" Content="Progress" HorizontalAlignment="Center"/>
+                            <ProgressBar Name="ProgressBar_Convert" Height="16" Margin="10" />
+                        </StackPanel>
+                    </GroupBox>
+                </StackPanel>
+            </TabItem>
+        </TabControl>
     </Grid>
 </Window>

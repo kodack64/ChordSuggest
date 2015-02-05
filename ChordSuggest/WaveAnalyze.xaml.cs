@@ -22,7 +22,7 @@ namespace ChordSuggest {
 	/// <summary>
 	/// WaveAnalyze.xaml の相互作用ロジック
 	/// </summary>
-	public partial class WaveAnalyze : Window {
+	public partial class WaveAnalyze : Window,INotifyPropertyChanged {
 		private string myTargetFile;
 		public WaveAnalyze(string file) {
 			myTargetFile = file;
@@ -46,6 +46,53 @@ namespace ChordSuggest {
 		double[] targetData;
 	
 		// fft settings
+		public event PropertyChangedEventHandler PropertyChanged;
+
+		protected virtual void OnPropertyChanged(string propertyName) {
+			PropertyChangedEventHandler handler = this.PropertyChanged;
+			if (handler != null)
+				handler(this, new PropertyChangedEventArgs(propertyName));
+		}
+		int shiftBitSetting_;
+		public int shiftBitSetting {
+			set {
+				shiftBitSetting_ = value;
+				OnPropertyChanged("shiftBitSetting");
+				Label_ShiftLength.Content = String.Format("{0} samples, {1} , {2} blocks",
+					1 << shiftBitSetting_,
+					(1.0 * (1 << shiftBitSetting_) / sampleRate < 1.0) ? (1.0 * (1 << shiftBitSetting_) / sampleRate * 1e3).ToString("G3") + "ms" : (1.0 * (1 << shiftBitSetting_) / sampleRate).ToString("G3") + "sec", 
+					Math.Max((dataCount-(1<<blockBitSetting)) / (1 << shiftBitSetting_),0.0)
+					);
+			}
+			get {
+				return shiftBitSetting_;
+			}
+		}
+		int blockBitSetting_;
+		public int blockBitSetting {
+			set {
+				blockBitSetting_ = value;
+				OnPropertyChanged("blockBitSetting");
+				Label_BlockLength.Content = String.Format("{0}samples, {1:G3}, {2:G3}Hz resolution (cannot distinguish note lower than {3})", 
+					1 << blockBitSetting_,
+					(1.0 * (1 << blockBitSetting_) / sampleRate < 1.0) ? (1.0 * (1 << blockBitSetting_) / sampleRate * 1e3).ToString("G3") + "ms" : (1.0 * (1 << blockBitSetting_) / sampleRate).ToString("G3") + "sec",
+					1.0 * sampleRate / (1 << blockBitSetting_), 
+					getDivisibleNote(1.0 * sampleRate / (1 << blockBitSetting_))
+					);
+			}
+			get {
+				return blockBitSetting_;
+			}
+		}
+		private string getDivisibleNote(double freq) {
+			int note;
+			for (note = 0; note < 128; note++) {
+				double cfreq = 440 * Math.Pow(2, ((note+1) - 69) / 12.0) - 440 * Math.Pow(2, (note - 69) / 12.0);
+				if (cfreq > freq) break;
+			}
+			return  ChordBasic.toneList[(((note % ChordBasic.toneCount) + ChordBasic.toneCount) % ChordBasic.toneCount)].name + (note / ChordBasic.toneCount).ToString();			
+		}
+
 		int shiftBit;
 		int blockBit;
 		int shiftSize;
@@ -55,6 +102,9 @@ namespace ChordSuggest {
 		double baseFreq;
 		bool useParallel;
 		int processedCount;
+		int targetType;
+		int windowType;
+		bool workIsCancelled;
 
 		// fft result
 		double[,] noteSpectrums;
@@ -106,32 +156,112 @@ namespace ChordSuggest {
 					}
 					cur += byteDepth;
 				}
-				targetData[i] = waveData[0,i];
 			}
 
-			shiftBit = 10;
-			blockBit = 14;
+			Label_FileName.Content = myTargetFile;
+			double time = dataCount/sampleRate;
+			string str;
+			if(time>=3600)str=String.Format("{0}h {1}m {2}s",((int)time)/3600,(((int)time)%3600)/60,(((int)time)%60));
+			else if(time>=60)str=String.Format("{0}m {1}s",(((int)time)%3600)/60,(((int)time)%60));
+			else str= time.ToString("G3")+"s";
+			Label_PlayTime.Content = str;
+			Label_ChannelCount.Content = channels.ToString() + " ch";
+			Label_SampleCount.Content = dataCount.ToString()+" samples";
+			Label_SamplingRate.Content = sampleRate.ToString() + " Hz";
+			Label_BitDepth.Content = bitDepth.ToString()+" bit";
+
+			if (channels == 1) {
+				ComboBox_TargetArray.Items.Add("Monoral");
+			} else {
+				ComboBox_TargetArray.Items.Add("Stereo Mixed");
+				ComboBox_TargetArray.Items.Add("L+R");
+				ComboBox_TargetArray.Items.Add("L-R");
+				ComboBox_TargetArray.Items.Add("L");
+				ComboBox_TargetArray.Items.Add("R");
+			}
+			ComboBox_TargetArray.SelectedIndex = 0;
+
+			Slider_ShiftBit.Minimum = 8;
+			Slider_ShiftBit.Maximum = 16;
+			Slider_ShiftBit.IsSnapToTickEnabled = true;
+			Slider_ShiftBit.DataContext = this;
+			shiftBitSetting = 10;
+
+			Slider_BlockBit.Minimum = 8;
+			Slider_BlockBit.Maximum = 16;
+			Slider_BlockBit.IsSnapToTickEnabled = true;
+			Slider_BlockBit.DataContext = this;
+			blockBitSetting = 14;
+
+			ComboBox_WindowFunction.Items.Add("ハミング窓");
+			ComboBox_WindowFunction.Items.Add("ハン窓");
+			ComboBox_WindowFunction.Items.Add("矩形窓");
+			ComboBox_WindowFunction.SelectedIndex = 0;
+
+			ProgressBar_Convert.Maximum = 100;
+			ProgressBar_Convert.Minimum = 0;
+			ProgressBar_Convert.Value = 0;
+
+
+			Button_StartWork.IsEnabled = true;
+		}
+		private void Callback_WorkerStart(object sender, RoutedEventArgs arg) {
+
+			Button_StartWork.IsEnabled = false;
+			Button_CancelWork.IsEnabled= true;
+			workIsCancelled = false;
+
+			shiftBit = shiftBitSetting;
+			blockBit = blockBitSetting;
 			blockSize = 1 << blockBit;
 			shiftSize = 1 << shiftBit;
 			blockCount = (dataCount - blockSize) / shiftSize;
 			baseFreq = 1.0 * sampleRate / blockSize;
-			useParallel = true;
+			useParallel = (CheckBox_UseParallelize.IsChecked.Value == true);
+			noteSpectrums = new double[blockCount, 128];
 
 			ProgressBar_Convert.Maximum = blockCount;
 			ProgressBar_Convert.Minimum = 0;
 			ProgressBar_Convert.Value = 0;
 
-			noteSpectrums = new double[blockCount, 128];
+			windowType = ComboBox_WindowFunction.SelectedIndex;
+			targetType = ComboBox_TargetArray.SelectedIndex;
+
+			processedCount = 0;
 
 			worker = new BackgroundWorker();
+			worker.WorkerReportsProgress = true;
+			worker.WorkerSupportsCancellation = true;
 			worker.DoWork += new DoWorkEventHandler(doAnalyze);
 			worker.ProgressChanged += new ProgressChangedEventHandler(progressChanged);
-			worker.WorkerReportsProgress = true;
+			worker.RunWorkerCompleted += new RunWorkerCompletedEventHandler(workCompleted);
 			worker.RunWorkerAsync();
 		}
+		private void Callback_WorkerCancel(object sender, RoutedEventArgs arg) {
+			worker.CancelAsync();
+			Button_CancelWork.IsEnabled = false;
+			workIsCancelled = true;
+		}
 		private void progressChanged(object sender, ProgressChangedEventArgs arg) {
-			ProgressBar_Convert.Value = arg.ProgressPercentage;
-			ProgressLabel.Content = String.Format("Block {0}/{1}",arg.ProgressPercentage,blockCount);
+			int value = arg.ProgressPercentage;
+			if (value == -1) {
+				Label_ConvertProgress.Content = "Data preparing...";
+			} else {
+				ProgressBar_Convert.Value = value;
+				Label_ConvertProgress.Content = String.Format("Block {0}/{1}", value, blockCount);
+			}
+		}
+		private void workCompleted(object sender, RunWorkerCompletedEventArgs arg) {
+			if (arg.Error != null) {
+				Label_ConvertProgress.Content = "処理中に例外が起きました";
+			} else if (workIsCancelled) {
+				Label_ConvertProgress.Content = String.Format("Cancelled {0}/{1}", processedCount, blockCount);
+			} else {
+				Label_ConvertProgress.Content = String.Format("Completed {0} blocks",blockCount);
+				Tab_Spectrum.IsEnabled = true;
+			}
+			Button_StartWork.IsEnabled = true;
+			Button_CancelWork.IsEnabled = false;
 		}
 		private void doAnalyze(object sender, DoWorkEventArgs arg) {
 			// fft
@@ -182,21 +312,41 @@ namespace ChordSuggest {
 			// 69					= 440Hz center A
 			// 72					= 523Hz
 
-			// small shiftBit
-			// 時間あたりのサンプルが増える。
-			// 見たい中で最も短いノートよりは細かいサンプルが必要
-			// blockBitよりは小さくないと解析に歯抜けが生じる。
-			// 計算時間も増える。
 
-			// small blockBit
-			// FFTの区間が短くなり、時間分解能がよくなる。
-			// 見たい中で最も短いノートよりも短い区間でFFTする必要がある
-			// 周波数分解能が悪くなる。
-			// 最も区別したい低域のノートの周波数間隔より周波数の分解能が良い必要がある
-			// 計算時間が減る。
 			BackgroundWorker worker = sender as BackgroundWorker;
-			Stopwatch wa = new Stopwatch();
-			wa.Start();
+			worker.ReportProgress(-1);
+			// plus
+			if (targetType == 1) {
+				for (int i = 0; i < dataCount; i++) {
+					targetData[i] = (waveData[0, i] + waveData[1, i]) / 2;
+				}
+			}
+			// diff
+			else if (targetType == 2) {
+				for (int i = 0; i < dataCount; i++) {
+					targetData[i] = (waveData[0, i] - waveData[1, i]);
+				}
+			}
+			// L
+			else if (targetType == 3) {
+				for (int i = 0; i < dataCount; i++) {
+					targetData[i] = waveData[0, i];
+				}
+			}
+			// R
+			else if (targetType == 4) {
+				for (int i = 0; i < dataCount; i++) {
+					targetData[i] = waveData[1, i];
+				}
+			}
+			// mixed
+			else {
+				//(targetType == 0)
+				for (int i = 0; i < dataCount; i++) {
+					if (channels == 1) targetData[i] = waveData[0, i];
+					else targetData[i] = waveData[0, i] * waveData[1, i];
+				}
+			}
 			reverseBitArray = BitScrollArray(blockSize);
 			if (useParallel) {
 				cpuCount = Environment.ProcessorCount;
@@ -206,10 +356,7 @@ namespace ChordSuggest {
 				analyzeBlockParallel(0);
 			}
 
-			wa.Stop();
-			double fftTime = wa.ElapsedMilliseconds * 1e-3;
-			Console.WriteLine("{0} sec", fftTime);
-
+			/*
 			StreamWriter sw = new StreamWriter("spectrum.txt");
 			for (int j = 0; j < 128; j++) {
 				for (int i = 0; i < blockCount; i++) {
@@ -217,7 +364,8 @@ namespace ChordSuggest {
 				}
 				sw.WriteLine();
 			}
-			sw.Close();
+			 */
+
 		}
 		private void analyzeBlockParallel(int id) {
 			int startBlock = (blockCount/cpuCount)*id;
@@ -232,15 +380,37 @@ namespace ChordSuggest {
 				getSpectrum(outputRe,outputIm,blockBit,start,cur);
 				processedCount++;
 				worker.ReportProgress(processedCount);
+				if (worker.CancellationPending) {
+					break;
+				}
 			}
 		}
 
 		int[] reverseBitArray;
 		private void getSpectrum(double[] outputRe,double[] outputIm,int bitSize,int start,int blockId) {
-			for (int i = 0; i < blockSize; i++) {
-				int cur = reverseBitArray[i];
-				outputRe[i] = targetData[start + cur] * (0.54 - 0.46 * Math.Cos(2 * Math.PI * cur / blockSize));
-				outputIm[i] = 0;
+			// rectangular
+			if (windowType == 1) {
+				for (int i = 0; i < blockSize; i++) {
+					int cur = reverseBitArray[i];
+					outputRe[i] = targetData[start + cur];
+					outputIm[i] = 0;
+				}
+			}
+			// hann
+			else if (windowType == 2) {
+				for (int i = 0; i < blockSize; i++) {
+					int cur = reverseBitArray[i];
+					outputRe[i] = targetData[start + cur] * (0.5 - 0.5 * Math.Cos(2 * Math.PI * cur / blockSize));
+					outputIm[i] = 0;
+				}
+			}
+			// hamming
+			else {
+				for (int i = 0; i < blockSize; i++) {
+					int cur = reverseBitArray[i];
+					outputRe[i] = targetData[start + cur] * (0.54 - 0.46 * Math.Cos(2 * Math.PI * cur / blockSize));
+					outputIm[i] = 0;
+				}
 			}
 			for (int stage = 1; stage <= bitSize; stage++) {
 				int butterflyDistance = 1 << stage;

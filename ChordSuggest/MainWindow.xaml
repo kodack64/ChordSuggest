@@ -190,7 +190,12 @@
                 <StackPanel Margin="30" Orientation="Vertical">
                     <GroupBox Header="出力デバイス">
                         <StackPanel>
-                            <ComboBox Name="ComboBox_outputDevice" SelectionChanged="Callback_DeviceChanged"/>
+                            <ComboBox Name="ComboBox_outputDevice" SelectionChanged="Callback_OutputDeviceChanged"/>
+                        </StackPanel>
+                    </GroupBox>
+                    <GroupBox Header="入力デバイス">
+                        <StackPanel>
+                            <ComboBox Name="ComboBox_inputDevice" SelectionChanged="Callback_InputDeviceChanged"/>
                         </StackPanel>
                     </GroupBox>
                     <GroupBox Header="">
