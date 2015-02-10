@@ -15,8 +15,8 @@
                         <Button Content="X-" Click="Callback_XScaleDown" Margin="10"/>
                         <Button Content="Y+" Click="Callback_YScaleUp" Margin="10"/>
                         <Button Content="Y-" Click="Callback_YScaleDown" Margin="10"/>
-                        <Slider Name="Slider_Amplitude" Minimum="1" Maximum="100" Value="10" Width="100" ValueChanged="Callback_AmplitudeChanged"/>
-                        <Slider Name="Slider_Threshold" Minimum="0" Maximum="100" Value="0" Width="100"  ValueChanged="Callback_ThresholdChanged"/> 
+                        <Slider Name="Slider_Amplitude" Minimum="-5" Maximum="5" Value="0" Width="100" ValueChanged="Callback_AmplitudeChanged"/>
+                        <Slider Name="Slider_Threshold" Minimum="-10" Maximum="-1" Value="-1" Width="100"  ValueChanged="Callback_ThresholdChanged"/> 
                     </StackPanel>
                     <Grid Grid.Row="1">
                         <Grid.ColumnDefinitions>

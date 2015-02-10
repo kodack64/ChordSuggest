@@ -137,13 +137,16 @@ namespace ChordSuggest {
 				Math.Max((dataCount - (1 << blockBitSetting_)) / (1 << shiftBitSetting_) * (ComboBox_TargetArray.SelectedIndex == 0 ? channels : 1), 0.0)
 				);
 		}
+		private string getToneOctave(int note) {
+			return ChordBasic.toneList[(((note % ChordBasic.toneCount) + ChordBasic.toneCount) % ChordBasic.toneCount)].name + (note / ChordBasic.toneCount).ToString();
+		}
 		private string getDivisibleNote(double freq) {
 			int note;
 			for (note = 0; note < 128; note++) {
 				double cfreq = 440 * Math.Pow(2, ((note+1) - 69) / 12.0) - 440 * Math.Pow(2, (note - 69) / 12.0);
 				if (cfreq > freq) break;
 			}
-			return  ChordBasic.toneList[(((note % ChordBasic.toneCount) + ChordBasic.toneCount) % ChordBasic.toneCount)].name + (note / ChordBasic.toneCount).ToString();			
+			return getToneOctave(note);
 		}
 		int shiftBit;
 		int blockBit;
@@ -194,8 +197,8 @@ namespace ChordSuggest {
 		}
 		List<Rectangle> keyboardList = new List<Rectangle>();
 		PixelFormat pf;
-		double thresholdPower = 0.01;
-		double amplitude = 3;
+		double thresholdPower = -1;
+		double amplitude = 1;
 
 		// image convert result
 		byte[] pixels;
@@ -232,6 +235,9 @@ namespace ChordSuggest {
 				rect.Width = 50;
 				rect.Height = yScale;
 				if (ChordBasic.isWhiteKey(note)) {
+					if (note == ChordBasic.toneList[0].noteNumber) {
+						rect.Fill = Brushes.LightGray;
+					}
 					rect.Stroke = Brushes.Black;
 				} else {
 					rect.Fill = Brushes.Black;
@@ -605,8 +611,16 @@ namespace ChordSuggest {
 			for (int block = 0; block < blockCount; block++) {
 				for (int note = 0; note < 128; note++) {
 					double power = noteSpectrums[block, note];
-					power = Math.Log(1 + (power - minimumSpectrum) / (maximumSpectrum - minimumSpectrum)) / Math.Log(2.0);
-					power = power < thresholdPower ? 0 : Math.Min(power * amplitude, 1.0);
+
+					// spec to db/10
+					if (power == 0) power = double.MinValue;
+					else power = Math.Log10(power / maximumSpectrum);
+
+					// set minimum db and normaize to [0,1]
+					if (power < thresholdPower) power = 0;
+					else power = (power - thresholdPower) / (0 - thresholdPower);
+
+					power = Math.Min(power * amplitude, 1.0);
 					pixels[3 * block + (127 - note) * rawStride] = (byte)Math.Max(0, 0xff * (1.0 - Math.Abs(3.0 - power * 3.0)));
 					pixels[3 * block + (127 - note) * rawStride + 1] = (byte)Math.Max(0, 0xff * (1.0 - Math.Abs(2.0 - power * 3.0)));
 					pixels[3 * block + (127 - note) * rawStride + 2] = (byte)Math.Max(0, 0xff * (1.0 - Math.Abs(1.0 - power * 3.0)));
@@ -666,26 +680,37 @@ namespace ChordSuggest {
 		private void Callback_YScaleDown(object sender, EventArgs arg) {
 			yScale--;
 		}
-		private void Callback_ThresholdChanged(object sender, EventArgs arg) {
-			thresholdPower = Slider_Threshold.Value / 100.0;
+		private void Callback_AmplitudeChanged(object sender, EventArgs arg) {
+			amplitude = Math.Pow(1.1,Slider_Amplitude.Value);
 			repaintImage();
 		}
-		private void Callback_AmplitudeChanged(object sender, EventArgs arg) {
-			amplitude = Slider_Amplitude.Value / 10.0;
+		private void Callback_ThresholdChanged(object sender, EventArgs arg) {
+			thresholdPower = Slider_Threshold.Value;
 			repaintImage();
 		}
 		private void repaintImage() {
 			if (Tab_Spectrum.IsEnabled) {
 				Stopwatch rep = new Stopwatch();
 				rep.Start();
+
 				for (int block = 0; block < blockCount; block++) {
 					for (int note = 0; note < 128; note++) {
+
 						double power = noteSpectrums[block, note];
-						power = Math.Log(1 + (power - minimumSpectrum) / (maximumSpectrum - minimumSpectrum)) / Math.Log(2.0);
-						power = power < thresholdPower ? 0 : Math.Min(power * amplitude, 1.0);
-						pixels[3 * block + (127 - note) * rawStride] = (byte)Math.Max(0, 0xff * (1.0 - Math.Abs(3.0 - power * 3.0)));
-						pixels[3 * block + (127 - note) * rawStride + 1] = (byte)Math.Max(0, 0xff * (1.0 - Math.Abs(2.0 - power * 3.0)));
-						pixels[3 * block + (127 - note) * rawStride + 2] = (byte)Math.Max(0, 0xff * (1.0 - Math.Abs(1.0 - power * 3.0)));
+
+						// spec to db/10
+						if (power == 0) power = double.MinValue;
+						else power = Math.Log10(power/maximumSpectrum);
+
+						// set minimum db and normaize to [0,1]
+						if (power < thresholdPower) power = 0;
+						else power = (power - thresholdPower) / (0 - thresholdPower);
+
+						power = Math.Min(power * amplitude, 1.0);
+
+						pixels[3 * block + (127 - note) * rawStride] = (byte)Math.Max(0, 0xff * (1.0 - Math.Abs(3.0 - power * 3.0))); //r
+						pixels[3 * block + (127 - note) * rawStride + 1] = (byte)Math.Max(0, 0xff * (1.0 - Math.Abs(2.0 - power * 3.0))); //g
+						pixels[3 * block + (127 - note) * rawStride + 2] = (byte)Math.Max(0, 0xff * (1.0 - Math.Abs(1.0 - power * 3.0))); //b
 					}
 				}
 				Image_Spectrum.Source = BitmapSource.Create(blockCount, 128, 96, 96, pf, null, pixels, rawStride);
