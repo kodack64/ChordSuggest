@@ -40,7 +40,7 @@ namespace ChordSuggest {
 
 			whiteKeyCountInOctave = 0;
 			for (int i = 0; i < ChordBasic.toneCount; i++) {
-				if (isWhiteKey(i)) whiteKeyCountInOctave++;
+				if (ChordBasic.isWhiteKey(i)) whiteKeyCountInOctave++;
 			}
 		}
 		public void open(int id) {
@@ -105,7 +105,7 @@ namespace ChordSuggest {
 			blackKeyWidth = keyWidth / 2;
 			Rectangle rect;
 			for (int i = lowestKey; i < highestKey; i++) {
-				if (isWhiteKey(i)) {
+				if (ChordBasic.isWhiteKey(i)) {
 					rect = new Rectangle() {Stroke = Brushes.Black };
 					rect.Width = keyWidth;
 					rect.Height = keyHeight;
@@ -125,15 +125,11 @@ namespace ChordSuggest {
 				}
 			}
 		}
-		private bool isWhiteKey(int note) {
-			int myTone = (((note - ChordBasic.toneList[0].noteNumber) % ChordBasic.toneCount)+ChordBasic.toneCount)%ChordBasic.toneCount;
-			return (ChordBasic.toneList[myTone].intervalPrefix == Tone.IntervalPrefix.perfect || ChordBasic.toneList[myTone].intervalPrefix == Tone.IntervalPrefix.major);
-		}
 		private int getWhiteKeyCount(int note) {
 			int octFromLowestKey = (note - lowestKey) / ChordBasic.toneCount;
 			int keyCount =  octFromLowestKey * whiteKeyCountInOctave;
 			for (int i = octFromLowestKey * ChordBasic.toneCount + lowestKey ; i < note; i++) {
-				if (isWhiteKey(i)) keyCount++;
+				if (ChordBasic.isWhiteKey(i)) keyCount++;
 			}
 			return keyCount;
 		}
@@ -145,14 +141,14 @@ namespace ChordSuggest {
 			}
 			foreach (int note in notes) {
 				double position = getWhiteKeyCount(note)*keyWidth;
-				if (isWhiteKey(note)) position += keyWidth / 2;
+				if (ChordBasic.isWhiteKey(note)) position += keyWidth / 2;
 				position -= ellipseSize / 2;
 				Ellipse el = new Ellipse();
 				el.Fill = Brushes.Red;
 				el.Width = ellipseSize;
 				el.Height = ellipseSize;
 				Canvas.SetLeft(el, position);
-				if(isWhiteKey(note))Canvas.SetTop(el, ellipseHeight);
+				if(ChordBasic.isWhiteKey(note))Canvas.SetTop(el, ellipseHeight);
 				else Canvas.SetTop(el, blackKeyEllipseHeight);
 				canvas.Children.Add(el);
 				uieList.Add(el);

@@ -3,9 +3,34 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         Title="WaveAnalyze" Height="800" Width="800">
     <Grid>
-        <TabControl>
+        <TabControl Name="MyTabControl">
             <TabItem Header="Spctrum" IsEnabled="False" Name="Tab_Spectrum">
-                <Canvas/>
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="80"/>
+                        <RowDefinition Height="*"/>
+                    </Grid.RowDefinitions>
+                    <StackPanel Grid.Row="0" Orientation="Horizontal" Margin="10" HorizontalAlignment="Center" VerticalAlignment="Center">
+                        <Button Content="X+" Click="Callback_XScaleUp" Margin="10"/>
+                        <Button Content="X-" Click="Callback_XScaleDown" Margin="10"/>
+                        <Button Content="Y+" Click="Callback_YScaleUp" Margin="10"/>
+                        <Button Content="Y-" Click="Callback_YScaleDown" Margin="10"/>
+                        <Slider Name="Slider_Amplitude" Minimum="1" Maximum="100" Value="10" Width="100" ValueChanged="Callback_AmplitudeChanged"/>
+                        <Slider Name="Slider_Threshold" Minimum="0" Maximum="100" Value="0" Width="100"  ValueChanged="Callback_ThresholdChanged"/> 
+                    </StackPanel>
+                    <Grid Grid.Row="1">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="50"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+                        <ScrollViewer Grid.Column="0" Name="Scroll_Keyboard" HorizontalScrollBarVisibility="Visible" VerticalScrollBarVisibility="Hidden">
+                            <Canvas Name="Canvas_Keyboard"/>
+                        </ScrollViewer>
+                        <ScrollViewer Grid.Column="1" Name="Scroll_Spectrum" HorizontalScrollBarVisibility="Visible" VerticalScrollBarVisibility="Visible" ScrollChanged="Callback_Scrolled">
+                            <Image Name="Image_Spectrum" RenderOptions.BitmapScalingMode="NearestNeighbor" RenderOptions.EdgeMode="Aliased" SnapsToDevicePixels="True"/>
+                        </ScrollViewer>
+                    </Grid>
+                </Grid>
             </TabItem>
             <TabItem Header="FFT" IsSelected="True">
                 <StackPanel>
@@ -44,33 +69,30 @@
                                 <ColumnDefinition/>
                             </Grid.ColumnDefinitions>
                             <Grid.RowDefinitions>
-                                <RowDefinition/>
-                                <RowDefinition/>
-                                <RowDefinition/>
-                                <RowDefinition/>
-                                <RowDefinition/>
-                                <RowDefinition/>
+                                <RowDefinition Height="40"/>
+                                <RowDefinition Height="80"/>
+                                <RowDefinition Height="80"/>
+                                <RowDefinition Height="40"/>
+                                <RowDefinition Height="40"/>
+                                <RowDefinition Height="20"/>
                             </Grid.RowDefinitions>
                             <Label Grid.Row="0" Grid.Column="0" Content="解析するトラック" HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                            <ComboBox Grid.Row="0" Grid.Column="1" Name="ComboBox_TargetArray" Margin="10"/>
+                            <ComboBox Grid.Row="0" Grid.Column="1" Name="ComboBox_TargetArray" Margin="10" SelectionChanged="Callback_TargetArraySelectionChanged"/>
                             <Label Grid.Row="1" Grid.Column="0" Content="FTするサンプル数" HorizontalAlignment="Center" VerticalAlignment="Center"/>
                             <StackPanel  Grid.Row="1" Grid.Column="1">
-                                <Slider Name="Slider_BlockBit" Margin="10" Value="{Binding blockBitSetting,Mode=TwoWay,UpdateSourceTrigger=PropertyChanged}"/>
-                                <Label Name="Label_BlockLength" Margin="10"/>
+                                <Slider Name="Slider_BlockBit" Margin="10,0,10,0" Value="{Binding blockBitSetting,Mode=TwoWay,UpdateSourceTrigger=PropertyChanged}"/>
+                                <Label Name="Label_BlockLength"/>
                                 <Label>
-                                    大きいほど低域の解像度が良くなりますが、時間的に平坦化されて時間軸が平坦化され、また計算時間もかかります。
+                                    大きいほど低域の解像度が良くなりますが、時間的に平坦化されて計算時間も長くかかります。
                                 </Label>
                             </StackPanel>
                             <Label Grid.Row="2" Grid.Column="0" Content="時間の刻み" HorizontalAlignment="Center" VerticalAlignment="Center"/>
                             <StackPanel  Grid.Row="2" Grid.Column="1">
-                                <Slider Name="Slider_ShiftBit" Margin="10" Value="{Binding shiftBitSetting,Mode=TwoWay,UpdateSourceTrigger=PropertyChanged}"/>
-                                <Label Name="Label_ShiftLength" Margin="10"/>
+                                <Slider Name="Slider_ShiftBit" Margin="10,0,10,0" Value="{Binding shiftBitSetting,Mode=TwoWay,UpdateSourceTrigger=PropertyChanged}"/>
+                                <Label Name="Label_ShiftLength"/>
                                 <Label>
                                     大きいほどブロック数が減り計算が早くなりますが、時間分解能が悪くなります。
                                 </Label>
-                                <Label>
-                                    また、FTするサンプル数より大きいと一部のサンプルが無視されます。
-                                </Label> 
                             </StackPanel>
                             <Label Grid.Row="3" Grid.Column="0" Content="窓関数" HorizontalAlignment="Center" VerticalAlignment="Center"/>
                             <ComboBox Grid.Row="3" Grid.Column="1" Name="ComboBox_WindowFunction" Margin="10"/>
@@ -84,8 +106,12 @@
                     </GroupBox>
                     <GroupBox Header="Execute">
                         <StackPanel VerticalAlignment="Center" Orientation="Vertical" HorizontalAlignment="Stretch">
-                            <Label Name="Label_ConvertProgress" Content="Progress" HorizontalAlignment="Center"/>
-                            <ProgressBar Name="ProgressBar_Convert" Height="16" Margin="10" />
+                            <Label Name="Label_FileLoadProgress" Content="File load progress" HorizontalAlignment="Center"/>
+                            <ProgressBar Name="ProgressBar_FileLoad" Height="16" Margin="10" />
+                            <Label Name="Label_FFTProgress" Content="FFT progress" HorizontalAlignment="Center"/>
+                            <ProgressBar Name="ProgressBar_FFT" Height="16" Margin="10" />
+                            <Label Name="Label_ImageConvertProgress" Content="Image convert progress" HorizontalAlignment="Center"/>
+                            <ProgressBar Name="ProgressBar_ImageConvert" Height="16" Margin="10" />
                         </StackPanel>
                     </GroupBox>
                 </StackPanel>

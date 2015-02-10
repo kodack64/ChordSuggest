@@ -297,5 +297,9 @@ namespace ChordSuggest {
 		public static Tone getTone(int index) {
 			return toneList[index];
 		}
+		public static bool isWhiteKey(int note) {
+			int myTone = (((note - ChordBasic.toneList[0].noteNumber) % ChordBasic.toneCount) + ChordBasic.toneCount) % ChordBasic.toneCount;
+			return (ChordBasic.toneList[myTone].intervalPrefix == Tone.IntervalPrefix.perfect || ChordBasic.toneList[myTone].intervalPrefix == Tone.IntervalPrefix.major);
+		}
 	}
 }
