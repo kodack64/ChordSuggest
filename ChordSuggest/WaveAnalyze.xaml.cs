@@ -206,9 +206,12 @@ namespace ChordSuggest {
 
 		//timer
 		Stopwatch releaseTimer = new Stopwatch();
+		Stopwatch totalElapsed = new Stopwatch();
 		double releaseTime;
 		int lastRelease;
 
+
+		// initialize and file load
 		private void initialize() {
 			Label_FileName.Content = myTargetFile;
 
@@ -248,7 +251,7 @@ namespace ChordSuggest {
 				Canvas_Keyboard.Children.Add(rect);
 				keyboardList.Add(rect);
 			}
-			releaseTime = 1.0;
+			releaseTime = 0.1;
 
 			fileLoadWorker = new BackgroundWorker();
 			fileLoadWorker.WorkerReportsProgress = true;
@@ -356,6 +359,9 @@ namespace ChordSuggest {
 			Button_StartWork.IsEnabled = true;
 			updateEstimation();
 		}
+
+
+		// FFT start
 		private void Callback_WorkerStart(object sender, RoutedEventArgs arg) {
 
 			Button_StartWork.IsEnabled = false;
@@ -410,9 +416,10 @@ namespace ChordSuggest {
 				Label_FFTProgress.Content = String.Format("FFT : Block {0}/{1}", value, blockCount*totalTargetChannel);
 				ProgressBar_FFT.Maximum = blockCount*totalTargetChannel;
 				releaseTimer.Start();
+				totalElapsed.Start();
 			} else {
 				if (releaseTimer.ElapsedMilliseconds*1e-3 > releaseTime) {
-					double restTime = (releaseTimer.ElapsedMilliseconds * 1e-3 / (value - lastRelease)) * (blockCount * totalTargetChannel - value);
+					double restTime = totalElapsed.ElapsedMilliseconds * 1e-3 / value * (blockCount * totalTargetChannel - value);
 					Label_FFTProgress.Content = String.Format("FFT : Block {0}/{1}, {2:0.0}sec to complete", value, blockCount * totalTargetChannel, restTime);
 					releaseTimer.Reset();
 					releaseTimer.Start();
@@ -574,6 +581,9 @@ namespace ChordSuggest {
 				specCur++;
 			}
 		}
+
+
+		// complete FFT ad start image converting
 		private void FFTCompleted(object sender, RunWorkerCompletedEventArgs arg) {
 			if (arg.Error != null) {
 				Label_FFTProgress.Content = "処理中に例外が起きました";
@@ -608,26 +618,7 @@ namespace ChordSuggest {
 			rawStride = (blockCount*pf.BitsPerPixel+7)/8;
 			pixels = new byte[128 * rawStride];
 
-			for (int block = 0; block < blockCount; block++) {
-				for (int note = 0; note < 128; note++) {
-					double power = noteSpectrums[block, note];
-
-					// spec to db/10
-					if (power == 0) power = double.MinValue;
-					else power = Math.Log10(power / maximumSpectrum);
-
-					// set minimum db and normaize to [0,1]
-					if (power < thresholdPower) power = 0;
-					else power = (power - thresholdPower) / (0 - thresholdPower);
-
-					power = Math.Min(power * amplitude, 1.0);
-					pixels[3 * block + (127 - note) * rawStride] = (byte)Math.Max(0, 0xff * (1.0 - Math.Abs(3.0 - power * 3.0)));
-					pixels[3 * block + (127 - note) * rawStride + 1] = (byte)Math.Max(0, 0xff * (1.0 - Math.Abs(2.0 - power * 3.0)));
-					pixels[3 * block + (127 - note) * rawStride + 2] = (byte)Math.Max(0, 0xff * (1.0 - Math.Abs(1.0 - power * 3.0)));
-				}
-				imageConvertWorker.ReportProgress(block);
-			}
-			imageConvertWorker.ReportProgress(blockCount);
+			updatePixels(true);
 		}
 		private void progressChangedImageConvert(object sender, ProgressChangedEventArgs arg) {
 			int value = arg.ProgressPercentage;
@@ -648,6 +639,28 @@ namespace ChordSuggest {
 				}
 			}
 			ProgressBar_ImageConvert.Value = value;
+		}
+		private void updatePixels(bool doReport=false){
+			for (int block = 0; block < blockCount; block++) {
+				for (int note = 0; note < 128; note++) {
+					double power = noteSpectrums[block, note];
+
+					// linear to log
+					if (power == 0) power = double.MinValue;
+					else power = Math.Log10(power / maximumSpectrum);
+
+					// set minimum db and normaize to [0,1]
+					if (power < thresholdPower) power = 0;
+					else power = (power - thresholdPower) / (0 - thresholdPower);
+
+					power = Math.Min(power * amplitude, 1.0);
+					pixels[3 * block + (127 - note) * rawStride] = (byte)Math.Max(0, 0xff * (1.0 - Math.Abs(3.0 - power * 3.0)));
+					pixels[3 * block + (127 - note) * rawStride + 1] = (byte)Math.Max(0, 0xff * (1.0 - Math.Abs(2.0 - power * 3.0)));
+					pixels[3 * block + (127 - note) * rawStride + 2] = (byte)Math.Max(0, 0xff * (1.0 - Math.Abs(1.0 - power * 3.0)));
+				}
+				if(doReport)imageConvertWorker.ReportProgress(block);
+			}
+			if(doReport)imageConvertWorker.ReportProgress(blockCount);
 		}
 		private void imageConvertCompleted(object sender, RunWorkerCompletedEventArgs arg) {
 
@@ -690,31 +703,8 @@ namespace ChordSuggest {
 		}
 		private void repaintImage() {
 			if (Tab_Spectrum.IsEnabled) {
-				Stopwatch rep = new Stopwatch();
-				rep.Start();
-
-				for (int block = 0; block < blockCount; block++) {
-					for (int note = 0; note < 128; note++) {
-
-						double power = noteSpectrums[block, note];
-
-						// spec to db/10
-						if (power == 0) power = double.MinValue;
-						else power = Math.Log10(power/maximumSpectrum);
-
-						// set minimum db and normaize to [0,1]
-						if (power < thresholdPower) power = 0;
-						else power = (power - thresholdPower) / (0 - thresholdPower);
-
-						power = Math.Min(power * amplitude, 1.0);
-
-						pixels[3 * block + (127 - note) * rawStride] = (byte)Math.Max(0, 0xff * (1.0 - Math.Abs(3.0 - power * 3.0))); //r
-						pixels[3 * block + (127 - note) * rawStride + 1] = (byte)Math.Max(0, 0xff * (1.0 - Math.Abs(2.0 - power * 3.0))); //g
-						pixels[3 * block + (127 - note) * rawStride + 2] = (byte)Math.Max(0, 0xff * (1.0 - Math.Abs(1.0 - power * 3.0))); //b
-					}
-				}
+				updatePixels();
 				Image_Spectrum.Source = BitmapSource.Create(blockCount, 128, 96, 96, pf, null, pixels, rawStride);
-//				Console.WriteLine(rep.ElapsedMilliseconds.ToString());
 			}
 		}
 	}

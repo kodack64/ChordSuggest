@@ -84,6 +84,7 @@ namespace ChordSuggest {
 		List<ChordPad> chordPadList = new List<ChordPad>();
 		private Dictionary<long, int> harmonyToId = new Dictionary<long, int>();
 		private List<Harmony> harmonies = new List<Harmony>();
+		private List<Window> analyzeWindowList = new List<Window>();
 	
 		MidiManage mm = new MidiManage();
 		public MainWindow() {
@@ -118,19 +119,22 @@ namespace ChordSuggest {
 			Write("Initialize voicing manage\n");
 			VoicingManage.createInstance();
 
-			ChordPadPanel.MouseLeftButtonDown += new MouseButtonEventHandler(Callback_MouseDown);
-			this.MouseLeftButtonUp += new MouseButtonEventHandler(Callback_MouseUp);
-			this.LostMouseCapture += new MouseEventHandler(Callback_MouseLost);
-			this.AllowDrop = true;
-			this.Drop += new DragEventHandler(Callback_FileDrop);
-
 			createScaleLabel();
 			createTonePad();
 			createChannelSelector();
 			createProgramSelector();
 			createKeySelector();
+			mm.setCanvas(KeyboardCanvas);
 
+			initializeUI();
+		}
+		private void initializeUI() {
 			// データバインド
+			ChordPadPanel.MouseLeftButtonDown += new MouseButtonEventHandler(Callback_MouseDown);
+			this.MouseLeftButtonUp += new MouseButtonEventHandler(Callback_MouseUp);
+			this.LostMouseCapture += new MouseEventHandler(Callback_MouseLost);
+			this.AllowDrop = true;
+			this.Drop += new DragEventHandler(Callback_FileDrop);
 			CheckBox_HoldMode.DataContext = this;
 			fileDatabaseList.ItemsSource = cpd.fileStates;
 			ComboBox_outputDevice.ItemsSource = mm.outDeviceList;
@@ -158,28 +162,8 @@ namespace ChordSuggest {
 			VoicingManage.getInstance().baseNotePolicyIndex = 1;
 			VoicingManage.getInstance().baseNearToPolicyIndex = 0;
 			VoicingManage.getInstance().expandToPolicyIndex = 0;
+		}
 
-			mm.setCanvas(KeyboardCanvas);
-/*			Dispatcher.BeginInvoke(
-			   new Action(() => {
-					mm.paintKeyboard();
-			   })
-			);*/
-		}
-		private void Window_SizeChanged(object sender,SizeChangedEventArgs args) {
-			mm.paintKeyboard();
-		}
-		private List<Window> analyzeWindowList = new List<Window>();
-		private void Callback_FileDrop(object sender, DragEventArgs arg) {
-			string[] files = arg.Data.GetData(DataFormats.FileDrop) as string[];
-			foreach (string file in files) {
-				if (file.EndsWith(".wave") || file.EndsWith(".wav")) {
-					Window win = new WaveAnalyze(file);
-					analyzeWindowList.Add(win);
-					win.Show();
-				}
-			}
-		}
 
 		// UI関連
 		private List<Label> scaleLabels= new List<Label>();
@@ -358,6 +342,19 @@ namespace ChordSuggest {
 
 
 		// Callback Functions
+		private void Window_SizeChanged(object sender, SizeChangedEventArgs args) {
+			mm.paintKeyboard();
+		}
+		private void Callback_FileDrop(object sender, DragEventArgs arg) {
+			string[] files = arg.Data.GetData(DataFormats.FileDrop) as string[];
+			foreach (string file in files) {
+				if (file.EndsWith(".wave") || file.EndsWith(".wav")) {
+					Window win = new WaveAnalyze(file);
+					analyzeWindowList.Add(win);
+					win.Show();
+				}
+			}
+		}
 		public void Callback_MouseDown(object sender, MouseButtonEventArgs arg) {
 			if(TabControl.SelectedIndex==0)noteOn();
 		}
@@ -372,7 +369,6 @@ namespace ChordSuggest {
 			VoicingManage.getInstance().resetNearTo();
 			noteOff();
 		}
-
 		private void Callback_RefreshFileList(object sender, RoutedEventArgs e) {
 			Write("Refresh file list\n");
 			cpd.saveFileSwitch();
