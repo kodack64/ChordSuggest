@@ -1,0 +1,19 @@
+<pads>
+	<pad id = "0" notation = ""/>
+	<pad id = "1" notation = "m"/>
+	<pad id = "2" notation = "7"/>
+	<pad id = "3" notation = "M7"/>
+	<pad id = "4" notation = "m7"/>
+	<pad id = "4" notation = "m7/F"/>
+	<pad id = "5" notation = "m7-5"/>
+	<pad id = "6" notation = "sus4"/>
+	<pad id = "7" notation = "7sus4"/>
+	<pad id = "6" notation = "/E"/>
+	<pad id = "6" notation = "/G"/>
+	<pad id = "8" notation = "aug"/>
+	<pad id = "9" notation = "dim"/>
+	<pad id = "10" notation = "6"/>
+	<pad id = "11" notation = "9"/>
+	<pad id = "12" notation = "m6"/>
+	<pad id = "13" notation = "mM7"/>
+</pads>

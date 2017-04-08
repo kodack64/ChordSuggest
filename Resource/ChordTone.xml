@@ -1,0 +1,15 @@
+
+<tones>
+	<tone id = "0"	name = "C"	number = "60"	interval = "P1"	subname = "B#"/>
+	<tone id = "1"	name = "C#"	number = "61"	interval = "m2"	subname = "Db"/>
+	<tone id = "2"	name = "D"	number = "62"	interval = "M2"	subname = ""/>
+	<tone id = "3"	name = "D#"	number = "63"	interval = "m3"	subname = "Eb"/>
+	<tone id = "4"	name = "E"	number = "64"	interval = "M3"	subname = "Fb"/>
+	<tone id = "5"	name = "F"	number = "65"	interval = "P4"	subname = "E#"/>
+	<tone id = "6"	name = "F#"	number = "66"	interval = "A4"	subname = "Gb"/>
+	<tone id = "7"	name = "G"	number = "67"	interval = "P5"	subname = ""/>
+	<tone id = "8"	name = "G#"	number = "68"	interval = "m6"	subname = "Ab"/>
+	<tone id = "9"	name = "A"	number = "69"	interval = "M6"	subname = ""/>
+	<tone id = "10"	name = "A#"	number = "70"	interval = "m7"	subname = "Bb"/>
+	<tone id = "11"	name = "B"	number = "71"	interval = "M7"	subname = "Cb"/>
+</tones>

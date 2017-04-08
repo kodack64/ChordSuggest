@@ -1,0 +1,47 @@
+
+<chords>
+	<!-- triad -->
+	<chord name = ""		work = "add P1,add M3,add P5"/>
+	<chord name = "M"		work = ""/>
+	<chord name = "¢"		work = ""/>
+	<chord name = "maj"		work = ""/>
+	<chord name = "m"		work = "dec M3"/>
+
+	<chord name = "dim"		work = "dec M3,dec P5"/>
+	<chord name = "aug"		work = "inc P5"/>
+	<chord name = "+5"		work = "inc P5"/>
+	<chord name = "#5"		work = "inc P5"/>
+	<chord name = "-5"		work = "dec P5"/>
+	<chord name = "ó5"		work = "dec P5"/>
+	<chord name = "b5"		work = "dec P5"/>
+
+	<!-- 7th -->
+	<chord name = "7"		work = "add m7"/>	
+	<chord name = "M7"		work = "add M7"/>
+	<chord name = "maj7"	work = "add M7"/>
+	<chord name = "¢7"		work = "add M7"/>
+	<chord name = "-7"		work = "dec M3,add m7"/>
+	<chord name = "ó7"		work = "dec M3,add m7"/>
+	<chord name = "b7"		work = "dec M3,add m7"/>
+	<chord name = "dim7"	work = "dec M3,dec P5,add M6"/>
+	<chord name = "aug7"	work = "inc P5,add M7"/>
+	<chord name = "6"		work = "add M6"/>
+
+	<!-- 9th -->
+	<chord name = "9"		work = "add m7,add M9"/>
+	<chord name = "ó9"		work = "add m9"/>
+	<chord name = "b9"		work = "add m9"/>
+	<chord name = "add9"	work = "add M9"/>
+	
+	<!-- other -->
+	<chord name = "add4"	work = "add P4"/>
+	<chord name = "#11"		work = "add A11"/>	
+	<chord name = "13"		work = "add M13"/>	
+	<chord name = "ó13"	work = "add m13"/>	
+	<chord name = "b13"		work = "add m13"/>	
+
+	<!-- sustain -->
+	<chord name = "sus2"	work = "dec M3,dec m3"/>
+	<chord name = "sus4"	work = "inc M3"/>
+
+</chords>

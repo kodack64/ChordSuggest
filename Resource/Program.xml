@@ -1,0 +1,162 @@
+<programlist>
+	<kind name = "Piano">
+		<program programNumber = "0" name = "Acoustic Grand Piano"/>
+		<program programNumber = "1" name = "Bright Acoustic Piano"/>
+		<program programNumber = "2" name = "Electric Grand Piano"/>
+		<program programNumber = "3" name = "Honky-tonk Piano"/>
+		<program programNumber = "4" name = "Electric Piano 1"/>
+		<program programNumber = "5" name = "Electric Piano 2"/>
+		<program programNumber = "6" name = "Harpsichord"/>
+		<program programNumber = "7" name = "Clavinet"/>
+	</kind>
+	<kind name = "Chromatic Percussion">
+		<program programNumber = "8" name = "Celesta"/>
+		<program programNumber = "9" name = "Glockenspiel"/>
+		<program programNumber = "10" name = "Music Box"/>
+		<program programNumber = "11" name = "Vibraphone"/>
+		<program programNumber = "12" name = "Marimba"/>
+		<program programNumber = "13" name = "Xylophone"/>
+		<program programNumber = "14" name = "Tubular Bells"/>
+		<program programNumber = "15" name = "Dulcimer"/>
+	</kind>
+	<kind name = "Organ">
+		<program programNumber = "16" name = "Drawbar Organ"/>
+		<program programNumber = "17" name = "Percussive Organ"/>
+		<program programNumber = "18" name = "Rock Organ"/>
+		<program programNumber = "19" name = "Church Organ"/>
+		<program programNumber = "20" name = "Reed Organ"/>
+		<program programNumber = "21" name = "Accordion"/>
+		<program programNumber = "22" name = "Harmonica"/>
+		<program programNumber = "23" name = "Tango Accordion"/>
+	</kind>
+	<kind name = "Guitar">
+		<program programNumber = "24" name = "Acoustic Guitar (nylon)"/>
+		<program programNumber = "25" name = "Acoustic Guitar (steel)"/>
+		<program programNumber = "26" name = "Electric Guitar (jazz)"/>
+		<program programNumber = "27" name = "Electric Guitar (clean)"/>
+		<program programNumber = "28" name = "Electric Guitar (muted)"/>
+		<program programNumber = "29" name = "Overdriven Guitar"/>
+		<program programNumber = "30" name = "Distortion Guitar"/>
+		<program programNumber = "31" name = "Guitar Harmonics"/>
+	</kind>
+	<kind name = "Bass">
+		<program programNumber = "32" name = "Acoustic Bass"/>
+		<program programNumber = "33" name = "Electric Bass (finger)"/>
+		<program programNumber = "34" name = "Electric Bass (pick)"/>
+		<program programNumber = "35" name = "Fretless Bass"/>
+		<program programNumber = "36" name = "Slap Bass 1"/>
+		<program programNumber = "37" name = "Slap Bass 2"/>
+		<program programNumber = "38" name = "Synth Bass 1"/>
+		<program programNumber = "39" name = "Synth Bass 2"/>
+	</kind>
+	<kind name = "Strings">
+		<program programNumber = "40" name = "Violin"/>
+		<program programNumber = "41" name = "Viola"/>
+		<program programNumber = "42" name = "Cello"/>
+		<program programNumber = "43" name = "Contrabass"/>
+		<program programNumber = "44" name = "Tremolo Strings"/>
+		<program programNumber = "45" name = "Pizzicato Strings"/>
+		<program programNumber = "46" name = "Orchestral Harp"/>
+		<program programNumber = "47" name = "Timpani"/>
+	</kind>
+	<kind name = "Ensemble">
+		<program programNumber = "48" name = "String Ensemble 1"/>
+		<program programNumber = "49" name = "String Ensemble 2"/>
+		<program programNumber = "50" name = "Synth Strings 1"/>
+		<program programNumber = "51" name = "Synth Strings 2"/>
+		<program programNumber = "52" name = "Choir Aahs"/>
+		<program programNumber = "53" name = "Voice Oohs"/>
+		<program programNumber = "54" name = "Synth Choir"/>
+		<program programNumber = "55" name = "Orchestra Hit"/>
+	</kind>
+	<kind name = "Brass">
+		<program programNumber = "56" name = "Trumpet"/>
+		<program programNumber = "57" name = "Trombone"/>
+		<program programNumber = "58" name = "Tuba"/>
+		<program programNumber = "59" name = "Muted Trumpet"/>
+		<program programNumber = "60" name = "French Horn"/>
+		<program programNumber = "61" name = "Brass Section"/>
+		<program programNumber = "62" name = "Synth Brass 1"/>
+		<program programNumber = "63" name = "Synth Brass 2"/>
+	</kind>
+	<kind name = "Reed">
+		<program programNumber = "64" name = "Soprano Sax"/>
+		<program programNumber = "65" name = "Alto Sax"/>
+		<program programNumber = "66" name = "Tenor Sax"/>
+		<program programNumber = "67" name = "Baritone Sax"/>
+		<program programNumber = "68" name = "Oboe"/>
+		<program programNumber = "69" name = "English Horn"/>
+		<program programNumber = "70" name = "Bassoon"/>
+		<program programNumber = "71" name = "Clarinet"/>
+	</kind>
+	<kind name = "Pipe">
+		<program programNumber = "72" name = "Piccolo"/>
+		<program programNumber = "73" name = "Flute"/>
+		<program programNumber = "74" name = "Recorder"/>
+		<program programNumber = "75" name = "Pan Flute"/>
+		<program programNumber = "76" name = "Blown bottle"/>
+		<program programNumber = "77" name = "Shakuhachi"/>
+		<program programNumber = "78" name = "Whistle"/>
+		<program programNumber = "79" name = "Ocarina"/>
+	</kind>
+	<kind name = "Synth Lead">
+		<program programNumber = "80" name = "Lead 1 (square)"/>
+		<program programNumber = "81" name = "Lead 2 (sawtooth)"/>
+		<program programNumber = "82" name = "Lead 3 (calliope)"/>
+		<program programNumber = "83" name = "Lead 4 (chiff)"/>
+		<program programNumber = "84" name = "Lead 5 (charang)"/>
+		<program programNumber = "85" name = "Lead 6 (voice)"/>
+		<program programNumber = "86" name = "Lead 7 (fifths)"/>
+		<program programNumber = "87" name = "Lead 8 (bass + lead)"/>
+	</kind>
+	<kind name = "Synth Pad">
+		<program programNumber = "88" name = "Pad 1 (new age)"/>
+		<program programNumber = "89" name = "Pad 2 (warm)"/>
+		<program programNumber = "90" name = "Pad 3 (polysynth)"/>
+		<program programNumber = "91" name = "Pad 4 (choir)"/>
+		<program programNumber = "92" name = "Pad 5 (bowed)"/>
+		<program programNumber = "93" name = "Pad 6 (metallic)"/>
+		<program programNumber = "94" name = "Pad 7 (halo)"/>
+		<program programNumber = "95" name = "Pad 8 (sweep)"/>
+	</kind>
+	<kind name = "Synth Effects">
+		<program programNumber = "96" name = "FX 1 (rain)"/>
+		<program programNumber = "97" name = "FX 2 (soundtrack)"/>
+		<program programNumber = "98" name = "FX 3 (crystal)"/>
+		<program programNumber = "99" name = "FX 4 (atmosphere)"/>
+		<program programNumber = "100" name = "FX 5 (brightness)"/>
+		<program programNumber = "101" name = "FX 6 (goblins)"/>
+		<program programNumber = "102" name = "FX 7 (echoes)"/>
+		<program programNumber = "103" name = "FX 8 (sci-fi)"/>
+	</kind>
+	<kind name = "Ethnic">
+		<program programNumber = "104" name = "Sitar"/>
+		<program programNumber = "105" name = "Banjo"/>
+		<program programNumber = "106" name = "Shamisen"/>
+		<program programNumber = "107" name = "Koto"/>
+		<program programNumber = "108" name = "Kalimba"/>
+		<program programNumber = "109" name = "Bagpipe"/>
+		<program programNumber = "110" name = "Fiddle"/>
+		<program programNumber = "111" name = "Shanai"/>
+	</kind>
+	<kind name = "Percussive">
+		<program programNumber = "112" name = "Tinkle Bell"/>
+		<program programNumber = "113" name = "Agogo"/>
+		<program programNumber = "114" name = "Steel Drums"/>
+		<program programNumber = "115" name = "Woodblock"/>
+		<program programNumber = "116" name = "Taiko Drum"/>
+		<program programNumber = "117" name = "Melodic Tom"/>
+		<program programNumber = "118" name = "Synth Drum"/>
+		<program programNumber = "119" name = "Reverse Cymbal"/>
+	</kind>
+	<kind name = "Sound effects">
+		<program programNumber = "120" name = "Guitar Fret Noise"/>
+		<program programNumber = "121" name = "Breath Noise"/>
+		<program programNumber = "122" name = "Seashore"/>
+		<program programNumber = "123" name = "Bird Tweet"/>
+		<program programNumber = "124" name = "Telephone Ring"/>
+		<program programNumber = "125" name = "Helicopter"/>
+		<program programNumber = "126" name = "Applause"/>
+		<program programNumber = "127" name = "Gunshot"/>
+	</kind>
+</programlist>

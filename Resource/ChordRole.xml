@@ -1,0 +1,114 @@
+<roles>
+	<!-- diatonic chord -->
+	<role chord = "C"			name="T"	scale="M"/>
+	<role chord = "Dm"			name="SD(Sub)"	scale="M"/>
+	<role chord = "Em"			name="T/D(Sub)"	scale="M"/>
+	<role chord = "F"			name="SD"	scale="M"/>
+	<role chord = "G"			name="D"	scale="M"/>
+	<role chord = "Am"			name="T(Sub)"	scale="M"/>
+	<role chord = "Bm-5"		name="D"		scale="M"/>
+
+	<!-- 6th chord -->
+	<role chord = "C6"			name="T"	scale="M"/>
+	<role chord = "Dm6"			name="SD(Sub)"	scale="M"/>
+	<role chord = "Em6"			name="T/D(Sub)"	scale="M"/>
+	<role chord = "F6"			name="SD"	scale="M"/>
+	<role chord = "G6"			name="D"	scale="M"/>
+	<role chord = "Am6"			name="T/SD(Sub/Tension)"	scale="M"/>
+	<role chord = "Bm6-5"		name="D"		scale="M"/>
+
+	<!-- diatonic 7th -->
+	<role chord = "CM7"			name="T"	scale="M"/>
+	<role chord = "Dm7"			name="SD(Sub)"	scale="M"/>
+	<role chord = "Em7"			name="T/D(Sub)"	scale="M"/>
+	<role chord = "FM7"			name="SD"	scale="M"/>
+	<role chord = "Am7"			name="T(Sub)"	scale="M"/>
+
+	<!-- secondary dominant / doppel dominant -->
+	<role chord = "C7"			name="T(2ndD)"	scale="M"/>
+	<role chord = "D7"			name="SD(DoppelD)"	scale="M"/>
+	<role chord = "E7"			name="D(2ndD)"	scale="M"/>
+	<role chord = "G7"			name="D(2ndD)"	scale="M"/>
+	<role chord = "A7"			name="T(2ndD)"	scale="M"/>
+	<role chord = "Bm7-5"		name="D(2ndD)"	scale="M"/>
+
+	<!-- Modal Interchange / Subdominant Minor-->
+	<role chord = "Fm"			name="SDM"	scale="M"/>
+	<role chord = "Fm7"			name="SDM"	scale="M"/>
+	<role chord = "Dm-5"		name="MI"	scale="M"/>
+	<role chord = "Dm7-5"		name="MI"	scale="M"/>
+	<role chord = "G#"			name="MI"	scale="M"/>
+	<role chord = "G#M7"		name="MI"	scale="M"/>
+	<role chord = "A#"			name="MI"	scale="M"/>
+	<role chord = "A#7"			name="MI"	scale="M"/>
+	<role chord = "D#"			name="MI"	scale="M"/>
+	<role chord = "Cm"			name="MI"	scale="M"/>
+	<role chord = "Cm7"			name="MI"	scale="M"/>
+	<role chord = "Gm"			name="MI"	scale="M"/>	
+
+	<!-- Secondary Substitution dominant / Subdominant Minor-->	
+	<role chord = "C#"			name="D(SDm)"	scale="M"/>
+	<role chord = "C#7"			name="D(SDm)"	scale="M"/>
+	<role chord = "C#M7"		name="D(SDm)"	scale="M"/>
+	<role chord = "F#7"			name="T(2ndSubD)"	scale="M"/>
+	<role chord = "G#7"			name="SD(2ndSubD)"	scale="M"/>
+	<role chord = "A#7"			name="D(2ndSubD)"	scale="M"/>
+	<role chord = "D#7"			name="T(2ndSubD)"	scale="M"/>
+
+	<!-- Passing Diminish -->
+	<role chord = "C#dim"			name="PD"	scale="M"/>
+	<role chord = "D#dim"			name="PD"	scale="M"/>
+	<role chord = "F#dim"			name="PD"	scale="M"/>
+	<role chord = "G#dim"			name="PD"	scale="M"/>
+
+	<!-- other -->
+	<role chord = "F#m7-5"		name="T/SD(Tension)"	scale="M"/>
+	<role chord = "F7"			name="SD(Blues)"	scale="M"/>
+	<role chord = "B7"			name="SD(BluesSubD)"	scale="M"/>
+
+
+	<!-- ***** minor key ***** -->
+
+	<!-- diatonic chord -->
+	<role chord = "Cm"			name="T"	scale="m"/>
+	<role chord = "Dm-5"		name="SD(sub)"	scale="m"/>
+	<role chord = "D#"			name="T(sub)"	scale="m"/>
+	<role chord = "Fm"			name="SD(sub)"	scale="m"/>
+	<role chord = "G"			name="D"	scale="m"/>
+	<role chord = "G#"			name="T/SD(sub)"	scale="m"/>
+	<role chord = "Fm"			name="SD"	scale="m"/>
+	<role chord = "Am-5"		name="T(sub)"	scale="m"/>
+	<role chord = "A#"			name="SD(sub)"	scale="m"/>
+
+	<!-- 6th chord -->
+	<role chord = "Cm6"			name="T"	scale="m"/>
+	<role chord = "Dm6-5"		name="SD(sub)"	scale="m"/>
+	<role chord = "D#6"			name="T"	scale="m"/>
+	<role chord = "Fm6"			name="SD"	scale="m"/>
+	<role chord = "G6"			name="D"	scale="m"/>
+	<role chord = "G#6"			name="T/SD(sub)"	scale="m"/>
+	<role chord = "A#6"			name="SD(sub)"	scale="m"/>
+
+	<!-- diatonic 7th -->
+	<role chord = "Cm7"			name="T"	scale="m"/>
+	<role chord = "CmM7"		name="T"	scale="m"/>
+	<role chord = "C#7"			name="D(sub)"	scale="m"/>
+	<role chord = "C#M7"		name="SD"	scale="m"/>
+	<role chord = "Dm7-5"		name="SD(sub)"	scale="m"/>
+	<role chord = "Dm7"			name="SD(sub)"	scale="m"/>
+	<role chord = "D#M7"		name="T(sub)"	scale="m"/>
+	<role chord = "D#M7+5"		name="T(sub)"	scale="m"/>
+	<role chord = "G7"			name="D"	scale="m"/>
+	<role chord = "Gm7"			name="D(sub)"	scale="m"/>
+	<role chord = "F7"			name="SD(sub)"	scale="m"/>
+	<role chord = "Fm7"			name="SD"	scale="m"/>
+	<role chord = "G#M7"		name="T/SD(sub)"	scale="m"/>
+	<role chord = "G#7"			name="SD(sub)"	scale="m"/>
+	<role chord = "Am7-5"		name="T(sub)"	scale="m"/>
+	<role chord = "A#7"			name="SD(sub)"	scale="m"/>
+	<role chord = "Bm7-5"		name="D(sub)"	scale="m"/>
+
+	<!-- other -->
+	<role chord = "Bdim"			name="D(sub)"	scale="m"/>
+
+</roles>
